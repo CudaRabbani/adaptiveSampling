@@ -1,0 +1,35 @@
+clc;
+clear;
+fileName = fopen('../Data/synthetic.raw','w');
+x = 1;
+y = 1;
+z = 1;
+alpha = 0.25;
+
+r = 0.5;
+%vol = zeros(x*y*z);
+
+counter = 1;
+
+for i = 1:x
+    for j = 1:y
+        dimCounter = 1;
+        for k= 1:z
+            xVal = (i/(x - 1) - 0.5);
+            yVal = (j/(y - 1) - 0.5);
+            zVal = (i/(z - 1) - 0.5);
+            vol(counter) = ((1 - sin((pi*zVal)/2) + alpha * (1 + rho_r(sqrt(xVal*xVal + yVal*yVal))))/(2 * ( 1 + alpha)));
+            counter = counter + 1;
+            dimCounter = dimCounter + 1;
+        end
+    end
+end
+dimCounter
+% X = vol(1:2*x+1);
+% Y = vol(2*x+2:(2*y+1)+(2*x+1));
+% Z = vol((2*y+1)+(2*x+1)+1:(2*z+1) +(2*y+1)+(2*x+1));
+% volume = reshape(vol, [2*x+1 y*2+1 2*z+1]);
+vol = uint8(vol);
+fwrite(fileName,vol,'double');
+fclose(fileName);
+xDim = 2*x + 1

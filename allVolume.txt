@@ -1,0 +1,42 @@
+Data/colon_phantom8.raw
+512
+512
+442
+0.9316
+0.9316
+0.5
+
+
+
+Data/backpack8.raw
+512
+512
+373
+1.0
+1.0
+1.0
+
+
+Data/engine.raw
+256
+256
+128
+1.0
+1.0
+1.0
+
+
+// foot : 256,256,256
+// skull: 256,256,256
+// Bonsai: 256,256,256
+// aneurism : 256,256,256
+// engine: 256,256,128
+// mri_ventricles: 256,256,124
+// marschnerlobb: 41, 41, 41
+// backpack8: 512, 512, 373
+// vertebra8: 512,512,512
+// marschnerlobb: 41, 41, 41
+// colon_phantom8: 512,512,442
+// mrt8_angio: 416,512,112
+// mrt8_angio2 : 256,320,128
+// stent8: 512,512,174
