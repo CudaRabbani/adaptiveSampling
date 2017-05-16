@@ -14,10 +14,10 @@ for i=1:n
     inc=abs(G2-G1);
     percentage = percentageSet(i)*100;
     fileName = num2str(percentage);
-    fileName = [fileName,'.bin'];
+    fileName = [fileName,'.txt'];
     fileName = [path fileName];
     fileName = char(fileName);
-    fileID = fopen(fileName,'w');
+    fileID = fopen(fileName,'wt');
     NUM=H*W*percentageSet(i);
     pixCount = int64(NUM);
     x=0;y=0;N=0;
@@ -33,7 +33,8 @@ for i=1:n
         y=mod(y+inc, G2);
     end
     mask = mask';
-    fwrite(fileID,mask,'uint8');
+%    fwrite(fileID,mask,'uint8');
+    fprintf(fileID,'%d\n', mask);
     fclose(fileID);
     
 %     figure;

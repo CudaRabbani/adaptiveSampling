@@ -56,18 +56,18 @@ endif()
 
 # Set these up as variables to make reading the generated file easier
 set(CMAKE_COMMAND "/usr/bin/cmake") # path
-set(source_file "/home/reza/cuda-workspace/adpativeSampling/cuda_src/reconstructionkernel.cu") # path
-set(NVCC_generated_dependency_file "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.NVCC-depend") # path
-set(cmake_dependency_file "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.depend") # path
+set(source_file "/home/reza/cuda-workspace/adaptiveSampling/cuda_src/reconstructionkernel.cu") # path
+set(NVCC_generated_dependency_file "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.NVCC-depend") # path
+set(cmake_dependency_file "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.depend") # path
 set(CUDA_make2cmake "/usr/share/cmake-2.8/Modules/FindCUDA/make2cmake.cmake") # path
 set(CUDA_parse_cubin "/usr/share/cmake-2.8/Modules/FindCUDA/parse_cubin.cmake") # path
 set(build_cubin OFF) # bool
 set(CUDA_HOST_COMPILER "/usr/bin/cc") # bool
 # We won't actually use these variables for now, but we need to set this, in
 # order to force this file to be run again if it changes.
-set(generated_file_path "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.") # path
-set(generated_file_internal "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o") # path
-set(generated_cubin_file_internal "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o.cubin.txt") # path
+set(generated_file_path "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.") # path
+set(generated_file_internal "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o") # path
+set(generated_cubin_file_internal "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o.cubin.txt") # path
 
 set(CUDA_NVCC_EXECUTABLE "/usr/local/cuda-7.5/bin/nvcc") # path
 set(CUDA_NVCC_FLAGS -gencode;arch=compute_50,code=sm_50 ;; ) # list
@@ -77,7 +77,7 @@ set(CUDA_NVCC_FLAGS_MINSIZEREL  ; )
 set(CUDA_NVCC_FLAGS_RELEASE  ; )
 set(CUDA_NVCC_FLAGS_RELWITHDEBINFO  ; )
 set(nvcc_flags -m64) # list
-set(CUDA_NVCC_INCLUDE_ARGS "-I/usr/local/cuda-7.5/include;-I/home/reza/cuda-workspace/adpativeSampling/common/inc;-I/usr/include;-I/home/reza/cuda-workspace/adpativeSampling/cuda_src;-I/home/reza/cuda-workspace/adpativeSampling/cpp_src;-I/usr/local/cuda-7.5/include") # list (needs to be in quotes to handle spaces properly).
+set(CUDA_NVCC_INCLUDE_ARGS "-I/usr/local/cuda-7.5/include;-I/home/reza/cuda-workspace/adaptiveSampling/common/inc;-I/usr/include;-I/home/reza/cuda-workspace/adaptiveSampling/cuda_src;-I/home/reza/cuda-workspace/adaptiveSampling/cpp_src;-I/usr/local/cuda-7.5/include") # list (needs to be in quotes to handle spaces properly).
 set(format_flag "-c") # string
 
 if(build_cubin AND NOT generated_cubin_file)

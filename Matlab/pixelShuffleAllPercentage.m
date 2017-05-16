@@ -1,7 +1,7 @@
 clc;
 clear;
-r = 1024;
-c = 1024;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -16,7 +16,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH
 W = GW
-percentageSet = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+percentageSet = [0.1]; % , 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 
@@ -92,18 +92,18 @@ for i =1:n
     
     
     patternFileName = strcat(path,patternString,ext);
-    patternFileName = char(patternFileName);
+    patternFileName = char(patternFileName)
     xFile = strcat(path, xString, ext);
     xFile = char(xFile);
     yFile = strcat(path,yString, ext);
     yFile = char(yFile);
     patternIdx = [patternString '_ptrnIdx'];
     patternIdx = strcat(path,patternIdx,ext);
-    patternIdx = char(patternIdx);
+    patternIdx = char(patternIdx)
     
     patternInfo = '_patternInfo';
     patternFile =strcat(path,patternString,patternInfo,ext);
-    patternFile = char(patternFile);
+    patternFile = char(patternFile)
     
     patternWithHolo = fopen(patternFileName, 'wt');
     patternXcoords = fopen(xFile, 'wt');

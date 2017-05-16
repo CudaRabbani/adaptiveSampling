@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/reza/cuda-workspace/adpativeSampling/cpp_src/main.cpp" "/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o"
+  "/home/reza/cuda-workspace/adaptiveSampling/cpp_src/main.cpp" "/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

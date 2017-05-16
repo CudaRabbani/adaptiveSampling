@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/reza/cuda-workspace/adpativeSampling
+CMAKE_SOURCE_DIR = /home/reza/cuda-workspace/adaptiveSampling
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/reza/cuda-workspace/adpativeSampling/build
+CMAKE_BINARY_DIR = /home/reza/cuda-workspace/adaptiveSampling/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/adaptiveSampling.dir/depend.make
@@ -280,10 +280,10 @@ CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o: /usr/local/cuda-7.5/include/vector_types.h
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o: CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_kernel.cu.o.cmake
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o: ../cuda_src/kernel.cu
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Building NVCC (Device) object CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o"
-	cd /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -E make_directory /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.
-	cd /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o -D generated_cubin_file:STRING=/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o.cubin.txt -P /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_kernel.cu.o.cmake
+	cd /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -E make_directory /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.
+	cd /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o -D generated_cubin_file:STRING=/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o.cubin.txt -P /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_kernel.cu.o.cmake
 
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o: ../common/inc/exception.h
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o: ../common/inc/helper_cuda.h
@@ -499,24 +499,24 @@ CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstruc
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o: /usr/local/cuda-7.5/include/vector_types.h
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o: CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.cmake
 CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o: ../cuda_src/reconstructionkernel.cu
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles $(CMAKE_PROGRESS_2)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles $(CMAKE_PROGRESS_2)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Building NVCC (Device) object CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o"
-	cd /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -E make_directory /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.
-	cd /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o -D generated_cubin_file:STRING=/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o.cubin.txt -P /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.cmake
+	cd /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -E make_directory /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/.
+	cd /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src && /usr/bin/cmake -D verbose:BOOL=$(VERBOSE) -D build_configuration:STRING=Debug -D generated_file:STRING=/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o -D generated_cubin_file:STRING=/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o.cubin.txt -P /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/adaptiveSampling_generated_reconstructionkernel.cu.o.cmake
 
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: CMakeFiles/adaptiveSampling.dir/flags.make
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../cpp_src/main.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles $(CMAKE_PROGRESS_3)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles $(CMAKE_PROGRESS_3)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o -c /home/reza/cuda-workspace/adpativeSampling/cpp_src/main.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o -c /home/reza/cuda-workspace/adaptiveSampling/cpp_src/main.cpp
 
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/reza/cuda-workspace/adpativeSampling/cpp_src/main.cpp > CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/reza/cuda-workspace/adaptiveSampling/cpp_src/main.cpp > CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.i
 
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/reza/cuda-workspace/adpativeSampling/cpp_src/main.cpp -o CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/reza/cuda-workspace/adaptiveSampling/cpp_src/main.cpp -o CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.s
 
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o.requires:
 .PHONY : CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o.requires
@@ -533,8 +533,8 @@ adaptiveSampling_OBJECTS = \
 
 # External object files for target adaptiveSampling
 adaptiveSampling_EXTERNAL_OBJECTS = \
-"/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o" \
-"/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o"
+"/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o" \
+"/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o"
 
 adaptiveSampling: CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o
 adaptiveSampling: CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o
@@ -558,6 +558,6 @@ CMakeFiles/adaptiveSampling.dir/clean:
 
 CMakeFiles/adaptiveSampling.dir/depend: CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_kernel.cu.o
 CMakeFiles/adaptiveSampling.dir/depend: CMakeFiles/adaptiveSampling.dir/cuda_src/./adaptiveSampling_generated_reconstructionkernel.cu.o
-	cd /home/reza/cuda-workspace/adpativeSampling/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/reza/cuda-workspace/adpativeSampling /home/reza/cuda-workspace/adpativeSampling /home/reza/cuda-workspace/adpativeSampling/build /home/reza/cuda-workspace/adpativeSampling/build /home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/reza/cuda-workspace/adaptiveSampling/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/reza/cuda-workspace/adaptiveSampling /home/reza/cuda-workspace/adaptiveSampling /home/reza/cuda-workspace/adaptiveSampling/build /home/reza/cuda-workspace/adaptiveSampling/build /home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/adaptiveSampling.dir/depend
 

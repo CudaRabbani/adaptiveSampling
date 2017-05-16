@@ -438,26 +438,41 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(lin,dimY);
 	strcat(lin,linCoord);
 //	strcat(lin);
-//	printf("Linear Pattern File: %s\n", lin);
+	printf("Linear Pattern File: %s\n", lin);
 	strcat(xFile,path);
 	strcat(xFile,name);
 	strcat(xFile,xCoord);
-//	printf("X-COORD: %s\t", xFile);
+	printf("X-COORD: %s\t", xFile);
 	strcat(yFile,path);
 	strcat(yFile,name);
 	strcat(yFile,yCoord);
-//	printf("Y-COORD: %s\n", yFile);
+	printf("Y-COORD: %s\n", yFile);
 	char info[70] = "";
 	strcat(info,path);
 	strcat(info,name);
 	strcat(info,"_patternInfo.txt");
+	if(percentage != 0)
+	{
+		pattern = fopen(patternFile, "r");
+		if(!pattern)
+		{
+			fprintf(stderr, "Error in opening pattern file\n");
+		}
+		else{
+			printf("Loading Pattern\n");
+			for(int i=0;i <gH*gW; i++)
+			{
+				fscanf(pattern, "%d", &h_pattern[i]);
+			}
+		}
+		fclose(pattern);
+	}
 
-	pattern = fopen(patternFile, "r");
 	X = fopen(xFile, "r");
 	Y = fopen(yFile, "r");
 	patternInfo = fopen(info, "r");
 	linPatternInfo = fopen(lin,"r");
-//	printf("Pattern Info: %s\n", info);
+	printf("Pattern Info: %s\n", info);
 
 
 	if(!X || !Y || !linPatternInfo)
@@ -473,18 +488,7 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 		}
 //		printf("Pattern reading for x and y coords done\n");
 	}
-	if(!pattern)
-	{
-		fprintf(stderr, "Error in opening pattern file\n");
-	}
-	else{
-		printf("Loading Pattern\n");
-		for(int i=0;i <gH*gW; i++)
-		{
-			fscanf(pattern, "%d", &h_pattern[i]);
-		}
-	}
-	fclose(pattern);
+
 	fclose(patternInfo);
 	fclose(linPatternInfo);
 	fclose(X);
@@ -541,6 +545,68 @@ void computeFPS()
         sdkResetTimer(&timer);
     }
 */
+}
+
+int * loadPatternBlock()
+{
+	FILE *ten = fopen("blockPattern/10.txt","r");
+	int *pixels;
+	int counter = 0;
+	int *temp;
+	temp = (int *)malloc(sizeof(int) * 256);
+
+	for(int i = 0; i<256; i++)
+	{
+		fscanf(ten, "%d", &temp[i]);
+		if(temp[i] == 1)
+		{
+			counter++;
+		}
+	}
+	printf("\nTotal turned on pixel: %d\n", counter);
+	copyTenPercentage(temp);
+	return temp;
+
+}
+
+int * adaptiveSample(int *in)
+{
+	int n = 50;
+	int counter = 0;
+	int blockX = 16, blockY = 16;
+	int G1 = 19;
+	int G2 = 28;
+	int inc = G2- G1;
+	int x = 0, y = 0;
+	int index = 0;
+	int *temp;
+	temp = (int *)malloc(sizeof(int)*256);
+	for(int i=0; i<blockY; i++)
+	{
+		for(int j=0; j<blockX; j++)
+		{
+			index = j + i * blockX;
+			temp[index] = in[index];
+		}
+	}
+
+	while(counter < n)
+	{
+		if(x<blockX && y<blockY)
+		{
+
+			index = x + y * blockX;
+			if(in[index] == 0)
+			{
+				temp[index] = 1;
+				counter++;
+			}
+		}
+		x = (x + inc)%G1;
+		y = (y + inc)%G2;
+	}
+
+	return temp;
 }
 
 void varianceAnalysis(float *in, int *out)
@@ -617,14 +683,14 @@ void varianceAnalysis(float *in, int *out)
 			ninety++;
 		}
 	}
-
+/*
 	printf("Min, Max: %f %f\n", min, max);
 	printf("10: %d\t20: %d\t30: %d\n", ten, twenty, thirty);
 	printf("40: %d\t50: %d\t60: %d\n", fourty, fifty, sixty);
 	printf("70: %d\t80: %d\t90: %d\n", seventy, eighty, ninety);
 	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
 			fourty + fifty + sixty + seventy + eighty + ninety);
-
+*/
 
 
 }
@@ -735,11 +801,13 @@ void display()
     cudaEventElapsedTime(&volTimer, volStart, volStop);
 
     varianceFunction(gridSize, blockSize, res_red, d_var_r, dataH, dataW);
-    if(cudaMemcpy(h_var_r, d_var_r, sizeof(float)*gridSize.x*gridSize.y, cudaMemcpyDeviceToHost) != cudaSuccess)
+    if(cudaMemcpy(h_var_r, res_red, sizeof(float)*gridSize.x*gridSize.y, cudaMemcpyDeviceToHost) != cudaSuccess)
     {
     	printf("Variance memory copy error\n");
     }
     varianceAnalysis(h_var_r,h_varPriority);
+
+
 
     cudaEventRecord(reconStart, 0);
 
@@ -759,6 +827,8 @@ void display()
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+
+
 
 //   	printf("Recon time: %f ms\n", reconTimer);
 
@@ -1373,10 +1443,21 @@ int main(int argc, char **argv)
     percentage = 30;
 */
     readAll();
+
     int pad = kernelH/2;
     printf("\nPad: %d\n", pad);
 	blockXsize = 16;
 	blockYsize = 16;
+	tenP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	tenP = loadPatternBlock();
+	int *twentyP;
+	twentyP= (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	twentyP = adaptiveSample(tenP);
+	for(int i=0; i<256; i++)
+	{
+		printf("[10p]: %d\t[20p]: %d\n", tenP[i], twentyP[i]);
+	}
+
 //    kernelH = 7;
 //    kernelW = 7;
 	float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));

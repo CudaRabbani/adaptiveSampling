@@ -1,1 +1,1 @@
-/home/reza/cuda-workspace/adpativeSampling/build/CMakeFiles/adaptiveSampling.dir
+/home/reza/cuda-workspace/adaptiveSampling/build/CMakeFiles/adaptiveSampling.dir

@@ -48,6 +48,8 @@ typedef struct
 
 __constant__ float3x4 c_invViewMatrix;  // inverse view matrix
 
+__constant__ int TenPercent[TILE_W*TILE_H];
+
 struct Ray
 {
 	float3 o;   // origin
@@ -344,8 +346,6 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 	return sample;
 }
 
-
-
 __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH,
 		float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep,bool cubic, bool cubicLight, int filterMethod, float *d_temp)
 {
@@ -407,10 +407,14 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 
 	int tempLin = linPattern[id];
 
-
+/*
 	float u = (d_xPattern[id]/(float)imageW)*2.0f - 1.0f;
 	float v = (d_yPattern[id]/(float)imageH)*2.0f - 1.0f;
-
+*/
+	float tempX = TenPercent[threadIdx.x + threadIdx.y * TILE_W] / TILE_W;
+	float tempY = TenPercent[threadIdx.x + threadIdx.y * TILE_W] % TILE_W;
+	float u = (tempX/(float)imageW)*2.0f - 1.0f;
+	float v = (tempY/(float)imageW)*2.0f - 1.0f;
 	// calculate eye ray in world space
 	Ray eyeRay;
 	eyeRay.o = make_float3(mul(c_invViewMatrix, make_float4(0.0f, 0.0f, 0.0f, 1.0f)));
@@ -817,6 +821,11 @@ void reconstructionFunction(dim3 grid, dim3 block, float *data, float *red, floa
 void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix)
 {
 	checkCudaErrors(cudaMemcpyToSymbol(c_invViewMatrix, invViewMatrix, sizeofMatrix));
+}
+
+void copyTenPercentage(int *pixels)
+{
+	checkCudaErrors(cudaMemcpyToSymbol(TenPercent, pixels, sizeof(int)*TILE_W*TILE_H));
 }
 
 

@@ -28,7 +28,7 @@ void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *re
 void initCudaCubicSurface(const uchar* voxels, uint3 volumeSize);
 //void initCudaCubicSurface(const ushort* voxels, uint3 volumeSize);
 void varianceFunction(dim3 grid, dim3 block, float *input, float *output, int dataH, int dataW);
-
+void copyTenPercentage(int *pixels);
 
 
 
