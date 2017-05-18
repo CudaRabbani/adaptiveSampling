@@ -75,7 +75,8 @@ float *h_var_r, *h_var_g, *h_var_b;
 float *d_var_r, *d_var_g, *d_var_b;
 int *h_varPriority;
 int *d_varPriority;
-int *tenP, *d_tenP;
+int *tenP, *twentyP, *thirtyP, *fortyP, *fiftyP, *sixtyP, *seventyP, *eightyP, *ninetyP;
+int *d_tenP, *d_twentyP, *d_thirtyP, *d_fortyP, *d_fiftyP, *d_sixtyP, *d_seventyP, *d_eightyP, *d_ninetyP;;
 
 
 float *h_temp, *d_temp;

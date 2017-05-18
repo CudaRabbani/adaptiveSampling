@@ -564,14 +564,14 @@ int * loadPatternBlock()
 		}
 	}
 	printf("\nTotal turned on pixel: %d\n", counter);
-	copyTenPercentage(temp);
 	return temp;
 
 }
 
-int * adaptiveSample(int *in)
+int * adaptiveSample(int *in, int percentage)
 {
-	int n = 50;
+	int n = (percentage * blockXsize * blockYsize)/100;
+	printf("From adaptive Sample: %d\n", n);
 	int counter = 0;
 	int blockX = 16, blockY = 16;
 	int G1 = 19;
@@ -581,6 +581,11 @@ int * adaptiveSample(int *in)
 	int index = 0;
 	int *temp;
 	temp = (int *)malloc(sizeof(int)*256);
+	for(int i=0; i<256;i++)
+	{
+		temp[i] = 0;
+	}
+	/*
 	for(int i=0; i<blockY; i++)
 	{
 		for(int j=0; j<blockX; j++)
@@ -589,6 +594,7 @@ int * adaptiveSample(int *in)
 			temp[index] = in[index];
 		}
 	}
+	*/
 
 	while(counter < n)
 	{
@@ -690,8 +696,8 @@ void varianceAnalysis(float *in, int *out)
 	printf("70: %d\t80: %d\t90: %d\n", seventy, eighty, ninety);
 	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
 			fourty + fifty + sixty + seventy + eighty + ninety);
-*/
 
+*/
 
 }
 
@@ -794,18 +800,22 @@ void display()
     invViewMatrix[11] = modelView[14];
 
     cudaEventRecord(volStart, 0);
-    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+    render_kernel(gridVol, gridSize, blockSize, d_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
        			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
 
-    varianceFunction(gridSize, blockSize, res_red, d_var_r, dataH, dataW);
-    if(cudaMemcpy(h_var_r, res_red, sizeof(float)*gridSize.x*gridSize.y, cudaMemcpyDeviceToHost) != cudaSuccess)
+    varianceFunction(gridSize, blockSize, res_blue, d_var_r, dataH, dataW);
+    if(cudaMemcpy(h_var_r, d_var_r, sizeof(float)*gridSize.x*gridSize.y, cudaMemcpyDeviceToHost) != cudaSuccess)
     {
     	printf("Variance memory copy error\n");
     }
     varianceAnalysis(h_var_r,h_varPriority);
+    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridSize.x*gridSize.y, cudaMemcpyHostToDevice) != cudaSuccess)
+    {
+    	printf("Variance Priority memory copy error\n");
+    }
 
 
 
@@ -1449,15 +1459,41 @@ int main(int argc, char **argv)
 	blockXsize = 16;
 	blockYsize = 16;
 	tenP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	twentyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	thirtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	fortyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	fiftyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	sixtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	seventyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	eightyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+	ninetyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+
 	tenP = loadPatternBlock();
-	int *twentyP;
-	twentyP= (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	twentyP = adaptiveSample(tenP);
+	twentyP = adaptiveSample(tenP, 20-10);
+	thirtyP = adaptiveSample(tenP, 30-10);
+	fortyP = adaptiveSample(tenP, 40-10);
+	fiftyP = adaptiveSample(tenP, 50-10);
+	sixtyP = adaptiveSample(tenP, 60-10);
+	seventyP = adaptiveSample(tenP, 70-10);
+	eightyP = adaptiveSample(tenP, 80-10);
+	ninetyP = adaptiveSample(tenP, 90-10);
+	copyAllPercentageRenderer(tenP, twentyP,thirtyP,fortyP,fiftyP,sixtyP,seventyP,eightyP,ninetyP);
+	/*
+	int t =0, tw = 0;
 	for(int i=0; i<256; i++)
 	{
+		if(tenP[i] == 1)
+		{
+			t++;
+		}
+		if(twentyP[i] == 1)
+		{
+			tw++;
+		}
 		printf("[10p]: %d\t[20p]: %d\n", tenP[i], twentyP[i]);
 	}
-
+	printf("\n10P: %d\t20P: %d\n", t, tw);
+	*/
 //    kernelH = 7;
 //    kernelW = 7;
 	float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));
@@ -1466,6 +1502,7 @@ int main(int argc, char **argv)
 	float blocksYFloat = (ceil(beforeCeilY));
 	blocksX = (int)blocksXFloat;
 	blocksY = (int)blocksYFloat;
+	printf("No of blocks for reconstruction: %d by %d\n", blocksX, blocksY);
 
 	GW = blocksX * blockXsize + (blocksX + 1) * pad;
 	GH = blocksY * blockYsize + (blocksY + 1) * pad;
@@ -1554,9 +1591,9 @@ int main(int argc, char **argv)
     h_linear = (int *) malloc(sizeof(int)*pixelCount);
     cudaMalloc(&d_linear, sizeof(int)*pixelCount);
 
-    blockSize = dim3(blockXsize, blockYsize);
+    blockSize = dim3(blockXsize, blockYsize); //16,16
     gridSize = dim3(blocksX, blocksY);
-    gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
+//    gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
 
 //    gridVol = dim3(iDivUp(ceil(sqrt(pixelCount)),blockXsize), iDivUp(ceil(sqrt(pixelCount)),blockYsize));
     gridVol = dim3(iDivUp(pixelCount,256));
@@ -1673,6 +1710,14 @@ int main(int argc, char **argv)
     if(cudaMalloc(&d_varPriority, sizeof(int)*gridSize.x*gridSize.y) != cudaSuccess)
     {
     	printf("cudaMalloc for variance priority is error\n");
+    }
+    for(int i=0; i<gridSize.x*gridSize.y; i++)
+    {
+    	h_varPriority[i] = 1;
+    }
+    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridSize.x*gridSize.y, cudaMemcpyHostToDevice) != cudaSuccess)
+    {
+    	printf("Variance Priority memory copy error\n");
     }
 
 /*

@@ -17,7 +17,7 @@ typedef unsigned short ushort;
 void setTextureFilterMode(bool bLinearFilter);
 void initCuda(void *h_volume, cudaExtent volumeSize);
 void freeCudaBuffers();
-void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
+void render_kernel(dim3 gridVol, dim3 gridSize, dim3 blockSize, int *variance, int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
 float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
 float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, float *d_temp);
 void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix);
@@ -29,6 +29,7 @@ void initCudaCubicSurface(const uchar* voxels, uint3 volumeSize);
 //void initCudaCubicSurface(const ushort* voxels, uint3 volumeSize);
 void varianceFunction(dim3 grid, dim3 block, float *input, float *output, int dataH, int dataW);
 void copyTenPercentage(int *pixels);
+void copyAllPercentageRenderer(int *ten, int *twenty, int *thirty, int *fourty, int *fifty, int *sixty, int *seventy, int *eighty, int *ninety);
 
 
 
