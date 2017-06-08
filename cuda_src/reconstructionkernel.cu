@@ -130,7 +130,7 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 	// (fabs(flag - 0.00) > 1e-2) (fabs(flag - 0.00) > 1e-6) && (counter < 3) && (counter < 50)    fabs(flag - 0.00) > 1e-6
 
 
-	while (counter < 15) //fabs(flag - 0.00) > 1e-6			counter < 50
+	while (counter < 25) //fabs(flag - 0.00) > 1e-6			counter < 50
 		{
 			//Dot product goes here and the answer will be stored in dot_result_num
 			cache_crnt_r[localIndex] = d_current_r[localIndex]*d_current_r[localIndex];
@@ -297,3 +297,22 @@ void initializeConvolutionFilter(float *kernel, int kernelLength)
 
 
  }
+
+ __global__ void testAddKernel(float *d_a, int size, float *ans)
+ {
+
+	 __shared__ float temp[TILE_W*TILE_H];
+	 int localIndex = threadIdx.x;// + threadIdx.y * blockDim.x;
+	 temp[localIndex] = d_a[localIndex];
+	 __syncthreads();
+
+	 dotProduct(temp, ans);
+
+ }
+
+
+ void testAdd(dim3 grid, dim3 block, float *d_a, int size, float *ans)
+ {
+	 testAddKernel<<<grid,block>>>(d_a, size, ans);
+ }
+

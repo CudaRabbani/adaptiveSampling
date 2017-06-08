@@ -42,6 +42,9 @@ typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
+
+
+
 const int ratioH = 512;
 const int ratioW = 512;
 
@@ -61,20 +64,26 @@ typedef unsigned char VolumeType;
 //typedef unsigned short VolumeType;
 int width, height;
 int dataH, dataW;
-int pixelCount, percentage;
+int window_W, window_H;
+int stripePixels, percentage, onPixel;
 int *d_pattern, *h_pattern, *h_linear;
 int *xPattern, *yPattern;
+int *h_X, *h_Y, *host_linear, *hostX, *hostY, *hostLinear, *d_X, *d_Y, *deviceLinear;
 int *d_xPattern, *d_yPattern, *d_linear;
 float *d_red, *d_green, *d_blue, *d_opacity;
 float *in_red, *in_green, *in_blue, *temp;
 float *res_red, *res_green, *res_blue, *res_opacity;
 float *recon_red, *recon_green, *recon_blue;
+float *h_gray, *d_gray;
 float *h_vol, *d_vol;
 float *h_red, *h_green, *h_blue;
 float *h_var_r, *h_var_g, *h_var_b;
 float *d_var_r, *d_var_g, *d_var_b;
 int *h_varPriority;
 int *d_varPriority;
+
+float *h_var, *d_var;
+int *h_linPattern, *d_linPattern;
 int *tenP, *twentyP, *thirtyP, *fortyP, *fiftyP, *sixtyP, *seventyP, *eightyP, *ninetyP;
 int *d_tenP, *d_twentyP, *d_thirtyP, *d_fortyP, *d_fiftyP, *d_sixtyP, *d_seventyP, *d_eightyP, *d_ninetyP;;
 
@@ -83,8 +92,9 @@ float *h_temp, *d_temp;
 int GW, GH;
 dim3 blockSize;//(16, 16);
 dim3 gridSize;
-dim3 gridVol;
+dim3 gridVolStripe, gridVol;
 dim3 gridBlend;
+
 
 int blocksX, blocksY, blockXsize, blockYsize;
 int kernelH, kernelW;

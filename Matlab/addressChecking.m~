@@ -1,0 +1,18 @@
+clc;
+clear;
+w = 13;
+h = 13;
+vals = 0:(13*13)-1;
+vals = reshape(vals, [13 13]);
+vals = vals';
+bdim_x = 2;
+bdim_y = 2;
+pad = 3;
+stripe = w * (bdim_y+pad);
+
+bid_x = 0;
+bid_y = 0;
+tid_x = 0;
+tid_y = 0;
+
+halo = bid_x * stripe + pad * w + 

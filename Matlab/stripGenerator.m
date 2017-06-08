@@ -29,6 +29,7 @@ fileName = strcat(dirName,'/',file); %../textFiles/Pattern/516by516_0/strip.txt
 ptrnLinIdx = [dirName '/' num2str(H) 'by' num2str(W) '_ptrnIdx.txt']
 xFile = [dirName '/' num2str(H) 'by' num2str(W) 'Xcoord.txt'];
 yFile = [dirName '/' num2str(H) 'by' num2str(W) 'Ycoord.txt'];
+patternMatrix = [dirName '/' num2str(H) 'by' num2str(W) 'matrix.txt'];
 totalPixel = [dirName '/' num2str(H) 'by' num2str(W) '_patternInfo.txt'];
 
 patternString = ones(H, W);
@@ -45,13 +46,14 @@ for row = blockY+padY+1:blockY+padY:r+diffH
     patternString(row:row+padY-1,:) = 0;
 end
 patternString = ~patternString;
-%imshow(patternString);
+imshow(patternString);
 onPixel = sum(sum(patternString(:,:)))
 totalPixel = fopen(totalPixel,'wt');
 fprintf(totalPixel,'%d\n',onPixel);
 X = fopen(xFile,'wt');
 Y = fopen(yFile,'wt');
 linearPattern = fopen(ptrnLinIdx,'wt');
+matrix = fopen(patternMatrix,'wt');
 counter = 1;
 for i = 1:GH
     for j = 1:GW
@@ -65,6 +67,7 @@ for i = 1:GH
     end
 end
 counter
+fprintf(matrix, '%d\n',patternString);
 fprintf(linearPattern,'%d\n', linCoords);
 fprintf(X, '%d\n', xCoords);
 fprintf(Y, '%d\n', yCoords);

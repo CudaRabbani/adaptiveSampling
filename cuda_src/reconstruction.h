@@ -27,4 +27,6 @@ void reconstructionFunction(dim3 grid, dim3 block, float *data, float *red, floa
 void VectorDotProduct(dim3 gridSize, dim3 blockSize, float *data_a, float *data_b, float *d_result, int length, int width);
 __global__ void reconstructionKernel(float *data, float *result, int *pattern, int dataH, int dataW, volatile float *device_x, volatile float *device_p);
 //__global__ void reconstructionKernel(float *data, float *result, int *pattern, int dataH, int dataW, volatile float *device_x, volatile float *device_p)
+
+void testAdd(dim3 grid, dim3 block, float *d_a, int size, float *ans);
 #endif /* RECONSTRUCTION_H_ */

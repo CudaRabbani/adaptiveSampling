@@ -11,7 +11,7 @@
 #define THRESHOLD 0.30f
 
 float *temp_red, *temp_green, *temp_blue;
-
+int_2 patternMatrix[7][256];
 
 inline void __cudaCheckError( const char *file, const int line )
 {
@@ -42,8 +42,7 @@ inline void __cudaCheckError( const char *file, const int line )
 
 void writeVarianceResult(float *data)
 {
-	if(frameCounter>=1)
-		return;
+
 	FILE *fp = fopen("textFiles/redVariance.txt","w");
 	if(!fp)
 	{
@@ -258,7 +257,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(rgbIsoSurfaceGT,bin);
 		strcat(rgbBinFile,rgbIsoSurfaceGT);
 	}
-	printf("[writeOutput]: %s\n", rgbBinFile);
+//	printf("[writeOutput]: %s\n", rgbBinFile);
 
 	binaryFile = fopen(rgbBinFile,"wb");
 	if(!binaryFile)
@@ -273,7 +272,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 			p.blue = h_blue[i];
 			fwrite(&p, sizeof(p),1,binaryFile);
 		}
-		printf("\n%s\nBinary file writing done\n",rgbBinFile);
+//		printf("\n%s\nBinary file writing done\n",rgbBinFile);
 	}
 	fclose(binaryFile);
 
@@ -397,9 +396,9 @@ void loadFiles(float *in_red, float *in_green, float *in_blue)
 
 }
 
-void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
+void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int gH, int gW, int stripePixels)
 {
-	FILE *pattern, *X, *Y, *patternInfo, *test, *linPatternInfo;
+	FILE *pattern, *X, *Y, *patternInfo, *test, *linPatternInfo, *matrix2D;
 	char H[5], W[5];
 	char path[50] = "textFiles/Pattern/";
 	char linCoord[15] = "_ptrnIdx.txt";
@@ -419,7 +418,7 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(path,dimY);
 	strcat(path,"_");
 	strcat(path,percent);
-	strcat(path,"/"); //path = textFiles/Pattern/516by516/
+	strcat(path,"/"); //path = textFiles/Pattern/516by516_0/
 	char patternName[50] = "";
 	char name[50] = "";
 	char ext[5] = ".txt";
@@ -432,21 +431,27 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(patternFile,path);
 	strcat(patternFile,name);
 	strcat(patternFile,ext);
-	printf("Input: %s\n", patternFile);
+//	printf("Input: %s\n", patternFile);
+	char matrix[15] = "matrix.txt";
+	char matrixFile[80]="";
+	strcat(matrixFile,path);
+	strcat(matrixFile,name);
+	strcat(matrixFile,matrix);
+//	printf("Matrix file: %s\n", matrixFile);
 	char lin[70]="";
 	strcat(lin,path);
 	strcat(lin,dimY);
 	strcat(lin,linCoord);
 //	strcat(lin);
-	printf("Linear Pattern File: %s\n", lin);
+//	printf("Linear Pattern File: %s\n", lin);
 	strcat(xFile,path);
 	strcat(xFile,name);
 	strcat(xFile,xCoord);
-	printf("X-COORD: %s\t", xFile);
+//	printf("X-COORD: %s\t", xFile);
 	strcat(yFile,path);
 	strcat(yFile,name);
 	strcat(yFile,yCoord);
-	printf("Y-COORD: %s\n", yFile);
+//	printf("Y-COORD: %s\n", yFile);
 	char info[70] = "";
 	strcat(info,path);
 	strcat(info,name);
@@ -472,7 +477,20 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	Y = fopen(yFile, "r");
 	patternInfo = fopen(info, "r");
 	linPatternInfo = fopen(lin,"r");
+	matrix2D = fopen(matrixFile, "r");
 	printf("Pattern Info: %s\n", info);
+	if(!matrix2D)
+	{
+		printf("2D matirx pattern file error\n");
+	}
+	else
+	{
+		for(int i=0;i <gH*gW; i++)
+		{
+			fscanf(matrix2D, "%d", &h_pattern[i]);
+		}
+	}
+
 
 
 	if(!X || !Y || !linPatternInfo)
@@ -480,7 +498,7 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 		fprintf(stderr, "Error in opening pattern file for X or Y or linear Pattern index\n");
 	}
 	else{
-		for(int i = 0; i<pixelCount; i++)
+		for(int i = 0; i<stripePixels; i++)
 		{
 			fscanf(X, "%d", &xPattern[i]);
 			fscanf(Y, "%d", &yPattern[i]);
@@ -501,18 +519,32 @@ void outputTest(float *test)
 {
 	FILE *f = fopen("textFiles/testOutput.txt","w");
 
-	for(int i= 0; i<pixelCount; i++)
+	for(int i= 0; i<stripePixels; i++)
 	{
 		fprintf(f, "%f\n", test[i]);
 	}
 	fclose(f);
 }
 
+void writeLinearAddress(int *address)
+{
+	FILE *fp = fopen("textFiles/tmepAddress.txt","w");
+//	printf("\n%d by %d\n", dataH, dataW);
+
+	for(int i=0; i<516*516; i++)
+	{
+		fprintf(fp, "%d\n", address[i]);
+	}
+	fclose(fp);
+//	printf("Address Writing done\n");
+}
+
+/*
 int iDivUp(int a, int b)
 {
     return (a % b != 0) ? (a / b + 1) : (a / b);
 }
-
+*/
 void computeFPS()
 {
 
@@ -560,17 +592,74 @@ int * loadPatternBlock()
 		fscanf(ten, "%d", &temp[i]);
 		if(temp[i] == 1)
 		{
+			patternMatrix[0][counter].x = i%16;
+			patternMatrix[0][counter].y = i/16;
 			counter++;
 		}
 	}
+	/*
+	for(int i=0; i<(counter-1); i++)
+	{
+		printf("[%d] : %d,%d\n", i, patternMatrix[0][i].x,patternMatrix[0][i].y);
+	}
+	*/
 	printf("\nTotal turned on pixel: %d\n", counter);
 	return temp;
 
 }
 
+
+void adaptiveSample2D(int *in)
+{
+
+	int n = 32;
+	int counter = 0;
+	int blockX = 16, blockY = 16;
+	int G1 = 19;
+	int G2 = 28;
+	int inc = G2- G1;
+	int x = 0, y = 0;
+	int index = 0;
+	int *temp;
+	int_2 matrix[7][256];
+	temp = (int *)malloc(sizeof(int)*256);
+	for(int i=0; i<256;i++)
+	{
+		temp[i] = 0;
+	}
+	for(int i= 1; i<7; i++)
+	{
+		int rowElementCounter = 0;
+		counter = 0;
+		while(counter < ((i+1)*n))
+		{
+			if(x<blockX && y<blockY)
+			{
+
+				index = x + y * blockX;
+				if(in[index]==0)
+				{
+					temp[index] = 1;
+					patternMatrix[i][rowElementCounter].x = x;
+					patternMatrix[i][rowElementCounter].y = y;
+
+					counter++;
+					rowElementCounter++;
+				}
+			}
+			x = (x + inc)%G1;
+			y = (y + inc)%G2;
+		}
+//		printf("Adaptive Sampling 2D: %d\n", rowElementCounter);
+
+	}
+
+
+}
+
 int * adaptiveSample(int *in, int percentage)
 {
-	int n = (percentage * blockXsize * blockYsize)/100;
+	int n = percentage;
 	printf("From adaptive Sample: %d\n", n);
 	int counter = 0;
 	int blockX = 16, blockY = 16;
@@ -618,10 +707,10 @@ int * adaptiveSample(int *in, int percentage)
 void varianceAnalysis(float *in, int *out)
 {
 	float min = 99999.0f, max = -99999.0f, sum = 0.0, avg = 0.0f, division = 0.0f;
-	int group = 9; //10p, 20p, 30p....90p
+	int group = 7; //10p, 20p, 30p....90p
 	int ten = 0, twenty =0, thirty = 0, fourty = 0, fifty = 0, sixty = 0, seventy = 0,
 			eighty = 0, ninety = 0;
-	for(int i =0; i<gridSize.x*gridSize.y; i++)
+	for(int i =0; i<gridVol.x*gridVol.y; i++)
 	{
 		if(in[i]>=max)
 		{
@@ -632,35 +721,28 @@ void varianceAnalysis(float *in, int *out)
 			min = in[i];
 		}
 	}
-	/*
-	for(int i =0; i<gridSize.x*gridSize.y; i++)
-	{
-		in[i] = in[i]/max;
-		printf("norm: %f\n", in[i]);
-	}
-	*/
 	division = (max - min)/float(group);
 //		printf("division: %f\n", division);
 	for(int i=0; i<gridSize.x*gridSize.y; i++)
 	{
 		if(in[i]>=min && in[i]<division+min)
 		{
-			out[i] = 1;
+			out[i] = 0;
 			ten++;
 		}
 		else if(in[i]>=(division+min+0.000001) && in[i]<(division*2+min))
 		{
-			out[i] = 2;
+			out[i] = 1;
 			twenty++;
 		}
 		else if(in[i]>=((division*2+min)+0.000001) && in[i]<(division*3+min))
 		{
-			out[i] = 3;
+			out[i] = 2;
 			thirty++;
 		}
 		else if(in[i]>=((division*3+min)+0.000001) && in[i]<(division*4+min))
 		{
-			out[i] = 4;
+			out[i] = 3;
 			fourty++;
 		}
 		else if(in[i]>=((division*3+min)+0.000001) && in[i]<(division*5+min))
@@ -670,38 +752,72 @@ void varianceAnalysis(float *in, int *out)
 		}
 		else if(in[i]>=((division*5+min)+0.000001) && in[i]<(division*6+min))
 		{
-			out[i] = 6;
+			out[i] = 5;
 			sixty++;
-		}
-		else if(in[i]>=((division*6+min)+0.000001) && in[i]<(division*7+min))
-		{
-			out[i] = 7;
-			seventy++;
-		}
-		else if(in[i]>=((division*7+min)+0.000001) && in[i]<(division*8+min))
-		{
-			out[i] = 8;
-			eighty++;
 		}
 		else
 		{
-			out[i] = 9;
-			ninety++;
+			out[i] = 6;
+			seventy++;
 		}
 	}
-/*
+
 	printf("Min, Max: %f %f\n", min, max);
+
 	printf("10: %d\t20: %d\t30: %d\n", ten, twenty, thirty);
-	printf("40: %d\t50: %d\t60: %d\n", fourty, fifty, sixty);
-	printf("70: %d\t80: %d\t90: %d\n", seventy, eighty, ninety);
+	printf("40: %d\t50: %d\t60: %d\t 70: %d\n", fourty, fifty, sixty, seventy);
 	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
-			fourty + fifty + sixty + seventy + eighty + ninety);
+			fourty + fifty + sixty + seventy);
 
-*/
-
+//	onPixel = ten*26 + twenty*51 + thirty *76 + fourty*102 + fifty*128 + sixty*153 + seventy*179 + eighty*204 + ninety*229;
+//	printf("Variance Analysis: #ON: %d\n", onPixel);
 }
 
+void extractAddress(int *linear)
+{
+	int counter = 0;
+	for(int i = 0; i<width*height; i++)
+	{
+		if(linear[i] == 1)
+		{
+			host_linear[counter] = i;
+			h_X[counter] = i%width;
+			h_Y[counter] = i/width;
+			counter++;
+		}
+	}
 
+	onPixel = counter-1;
+//	printf("Turned on pixel: %d\n", onPixel);
+//	printf("[%d by %d]\tExtract Address:[On] %d\t[Counter]: %d\n",width, height, onPixel, counter);
+}
+
+void copyAddress()
+{
+
+	hostX = (int*)malloc(sizeof(int)*onPixel);
+	hostY = (int*)malloc(sizeof(int)*onPixel);
+	hostLinear = (int*)malloc(sizeof(int)*onPixel);
+//	cudaMalloc(&deviceLinear, sizeof(int)*onPixel);
+//	cudaMalloc(&d_X, sizeof(int)*onPixel);
+//	cudaMalloc(&d_Y, sizeof(int)*onPixel);
+	for(int i=0; i<onPixel; i++)
+	{
+		hostLinear[i] = host_linear[i];
+		hostX[i] = h_X[i];
+		hostY[i] = h_Y[i];
+	}
+//	printf("%d\t%d\t%d\n", hostLinear[onPixel-1],hostX[onPixel-1],hostY[onPixel-1]);
+	cudaMemcpy(deviceLinear, hostLinear, sizeof(int)*onPixel, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_X, hostX, sizeof(int)*onPixel, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_Y, hostY, sizeof(int)*onPixel, cudaMemcpyHostToDevice);
+
+	free(hostX);
+	free(hostY);
+	free(hostLinear);
+
+//	printf("copyAddress: %d\n", onPixel);
+}
 
 // render image using CUDA
 void render()
@@ -729,7 +845,15 @@ void render()
     }
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
-    blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
+    if(reconstruct)
+    {
+    	blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
+    }
+    else
+    {
+    	blendFunction(gridBlend, blockSize, d_output,d_vol, d_red, d_green, d_blue, height, width, d_xPattern, d_yPattern, d_linear);
+    }
+
     cudaEventRecord(blendStop, 0);
     cudaEventSynchronize(blendStop);
     cudaEventElapsedTime(&blendTimer, blendStart, blendStop);
@@ -799,23 +923,52 @@ void display()
     invViewMatrix[10] = modelView[10];
     invViewMatrix[11] = modelView[14];
 
+//    generateAddress(gridSize, blockSize, d_varPriority, d_X, d_Y, d_linPattern);
+//    cudaMemcpy(h_linPattern, d_linPattern, sizeof(int) * height * width, cudaMemcpyDeviceToHost);
+//
+//
+//    extractAddress(h_linPattern);
+//    copyAddress();
+//    writeLinearAddress(h_linPattern);
+//    gridRender = dim3(iDivUp(onPixel,256));
+
     cudaEventRecord(volStart, 0);
-    render_kernel(gridVol, gridSize, blockSize, d_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
+    render_kernel(gridVol, gridVolStripe, blockSize, d_var, d_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol,d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel, stripePixels);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
+/*
+    if(cudaMemcpy(h_linPattern, d_linPattern, sizeof(int)*width*height, cudaMemcpyDeviceToHost) != cudaSuccess)
+    {
+    	printf("Display: Pattern copy error\n");
+    }
 
-    varianceFunction(gridSize, blockSize, res_blue, d_var_r, dataH, dataW);
-    if(cudaMemcpy(h_var_r, d_var_r, sizeof(float)*gridSize.x*gridSize.y, cudaMemcpyDeviceToHost) != cudaSuccess)
-    {
-    	printf("Variance memory copy error\n");
-    }
-    varianceAnalysis(h_var_r,h_varPriority);
-    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridSize.x*gridSize.y, cudaMemcpyHostToDevice) != cudaSuccess)
-    {
-    	printf("Variance Priority memory copy error\n");
-    }
+    writeLinearAddress(h_linPattern);
+*/
+
+
+
+//    cudaMemcpy(h_red, d_gray, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+//    cudaMemcpy(h_green, d_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+//    cudaMemcpy(h_blue, d_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+//    writeOutputVolume(h_red, h_green, h_blue);
+//    varianceFunction(gridSize, blockSize, d_gray, d_var, dataH, dataW);
+//    if(cudaMemcpy(h_var, d_var, sizeof(float)*gridVol.x*gridVol.y, cudaMemcpyDeviceToHost) != cudaSuccess)
+//    {
+//    	printf("Variance memory copy error\n");
+//    }
+////    writeVarianceResult(h_var);
+//
+//    varianceAnalysis(h_var,h_varPriority);
+//    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyHostToDevice) != cudaSuccess)
+//    {
+//    	printf("Variance Priority memory copy error\n");
+//    }
+
+//    free(h_X);
+//    free(h_Y);
+//    dim3 addGrid = (iDivUp(width,blockSize.x), iDivUp(height,blockSize.y));
 
 
 
@@ -825,7 +978,7 @@ void display()
     {
     	if(reconstruct)
     	{
-    		reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    		reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_linPattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 /*
     		cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     		cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
@@ -834,6 +987,7 @@ void display()
 */
     	}
     }
+
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
@@ -882,19 +1036,6 @@ void display()
 
 
     float ratio =  (float)width  / (float)height;
-    /*
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0);
-    glVertex2f(, 0);
-    glTexCoord2f(1, 0);
-    glVertex2f(1, 0);
-    glTexCoord2f(1, 1);
-    glVertex2f(1, 1);
-    glTexCoord2f(0, 1);
-    glVertex2f(0, 1);
-    glEnd();
-	*/
 
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
@@ -1093,71 +1234,12 @@ void reshape(int w, int h)
     float ratio =  newWidth  / newHeight;
     ratio = 1/ratio;
     initPixelBuffer();
-/*
-    float ar_new = newWidth/newHeight;
-    float ar_origin = ratioW/ratioH;
-    float scale_w = (float) newWidth / (float) ratioW;
-    float scale_h = (float) newHeight / (float) ratioH;
-    if (ar_new > ar_origin) {
-            scale_w = scale_h;
-        } else {
-            scale_h = scale_w;
-        }
-    float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
-	float margin_y = (newHeight - (float)ratioH * scale_h) / 2;
-*/
-    // calculate new grid size
-//    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
+
     gridSize = dim3(blocksX, blocksY);
-//    gridVol = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
-//    gridVol = dim3(iDivUp(ceil(sqrt(pixelCount)),blockXsize), iDivUp(ceil(sqrt(pixelCount)),blockYsize));
-    gridVol = dim3(iDivUp(pixelCount,256));
+    gridVolStripe = dim3(iDivUp(stripePixels,256));
+//    gridVol =dim3(iDivUp(onPixel,256));
     gridBlend = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
-//    gridSize = dim3(iDivUp(pixelCount, blockSize.x), iDivUp(pixelCount, blockSize.y));
-//    gridVol = dim3(iDivUp(sqrt(pixelCount),blockXsize), iDivUp(sqrt(pixelCount),blockYsize));
 
-
-
-/*
-	glViewport(margin_x, margin_y, (float)ratioW*scale_w, (float)newHeight*scale_h);
-//	glViewport(0, 0, (float)ratioW*scale_w, (float)newHeight*scale_h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-//	glOrtho(0, ratioW * ar_new, 0, ratioH * ar_new, 0, 1.0);
-	glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 100.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-*/
-	/*
-	glViewport(0, 0, width, height);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   gluPerspective(15.0, (float)width / height, 0.0, 1.0);
-   glMatrixMode(GL_MODELVIEW);
-*/
-
-    /*
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    if(ratio >=1.0)
-    {
-    	glOrtho(-1.0f*ratio, 1.0f*ratio,-1.0, 1.0, -1.0, 1.0);
-    }
-    else
-    {
-    	glOrtho(-1.0f, 1.0f,-1.0/ratio, 1.0/ratio, -1.0, 1.0);
-    }
-
-    //glOrtho(0.0, 1.0f,0.0, 1.0, 0.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-	*/
-
-//    glViewport(0,0,w,h);
-//    printf("margin: [%.2f] [%.2f] [] []");
     float temp = h/w;
     glViewport(0, 0, w, h);
     glMatrixMode(GL_MODELVIEW);
@@ -1433,6 +1515,46 @@ void readAll()
 
 int main(int argc, char **argv)
 {
+	//-------------------------------------Constant Memory Test
+/*
+	int temp[7][256];
+	for(int i =0; i<7; i++)
+	{
+		for(int j=0; j<256; j++)
+		{
+			temp[i][j] = i * 256 + j;
+		}
+	}
+
+	dim3 block, grid;
+	block = dim3(256);
+	grid = dim3(1);
+
+	copyConstantTest(grid, block,temp);
+
+*/
+
+	//---------------------Atomic add-----------------------------
+/*
+	float *h_a = (float *)malloc(sizeof(float) * 256);
+	float *d_a;
+	float *h_ans, *d_ans;
+	h_ans = (float*)malloc(sizeof(float));
+	cudaMalloc(&d_ans, sizeof(float));
+	cudaMalloc(&d_a, sizeof(float)*256);
+
+	for(int i=0; i<256; i++)
+	{
+		h_a[i] = float(i);
+//		printf("%f ", h_a[i]);
+	}
+
+	cudaMemcpy(d_a, h_a, sizeof(float)*256, cudaMemcpyHostToDevice);
+	testAdd(1, 256, d_a, 256, d_ans);
+	cudaMemcpy(h_ans, d_ans, sizeof(float), cudaMemcpyDeviceToHost);
+	printf("Atomic add: %f\n", h_ans[0]);
+*/
+
 	FILE *volumeInfo, *patternInfo;
 	char volName[50];
 	char patternInformation[100] = "textFiles/Pattern/";
@@ -1447,11 +1569,11 @@ int main(int argc, char **argv)
     float lambda = 0.01f;
     run = true;
     frameCounter = 0;
-/*
-    dataH = 1024;
-    dataW = 1024;
-    percentage = 30;
-*/
+
+//    dataH = 1024;
+//    dataW = 1024;
+//    percentage = 30;
+
     readAll();
 
     int pad = kernelH/2;
@@ -1468,32 +1590,40 @@ int main(int argc, char **argv)
 	eightyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
 	ninetyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
 
-	tenP = loadPatternBlock();
-	twentyP = adaptiveSample(tenP, 20-10);
-	thirtyP = adaptiveSample(tenP, 30-10);
-	fortyP = adaptiveSample(tenP, 40-10);
-	fiftyP = adaptiveSample(tenP, 50-10);
-	sixtyP = adaptiveSample(tenP, 60-10);
-	seventyP = adaptiveSample(tenP, 70-10);
-	eightyP = adaptiveSample(tenP, 80-10);
-	ninetyP = adaptiveSample(tenP, 90-10);
-	copyAllPercentageRenderer(tenP, twentyP,thirtyP,fortyP,fiftyP,sixtyP,seventyP,eightyP,ninetyP);
-	/*
-	int t =0, tw = 0;
-	for(int i=0; i<256; i++)
+	for(int i=0;i<7;i++)
 	{
-		if(tenP[i] == 1)
+		for(int j=0; j<256; j++)
 		{
-			t++;
+			patternMatrix[i][j].x = 999;
+			patternMatrix[i][j].y = 999;
 		}
-		if(twentyP[i] == 1)
-		{
-			tw++;
-		}
-		printf("[10p]: %d\t[20p]: %d\n", tenP[i], twentyP[i]);
 	}
-	printf("\n10P: %d\t20P: %d\n", t, tw);
-	*/
+
+	tenP = loadPatternBlock();
+	adaptiveSample2D(tenP);
+
+	for(int i= 0; i<1;i++)
+	{
+		for(int j =0; j<256; j++)
+		{
+//	int i=0, j=0;
+			printf("[%d,%d] = %d,%d  ",i, j, patternMatrix[i][j].x,patternMatrix[i][j].y);
+
+		}
+		printf("\n");
+	}
+	copyConstantTest_1( 1, 256, patternMatrix);
+
+	twentyP = adaptiveSample(tenP, 32);
+	thirtyP = adaptiveSample(tenP, 64);
+	fortyP = adaptiveSample(tenP, 96);
+	fiftyP = adaptiveSample(tenP, 128);
+	sixtyP = adaptiveSample(tenP, 160);
+	seventyP = adaptiveSample(tenP, 192);
+	eightyP = adaptiveSample(tenP, 224);
+	copyAllPercentageRenderer(tenP, twentyP,thirtyP,fortyP,fiftyP,sixtyP,seventyP,eightyP);
+
+
 //    kernelH = 7;
 //    kernelW = 7;
 	float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));
@@ -1502,71 +1632,18 @@ int main(int argc, char **argv)
 	float blocksYFloat = (ceil(beforeCeilY));
 	blocksX = (int)blocksXFloat;
 	blocksY = (int)blocksYFloat;
+
+    blockSize = dim3(blockXsize, blockYsize); //16,16
+    gridSize = dim3(blocksX, blocksY);
 	printf("No of blocks for reconstruction: %d by %d\n", blocksX, blocksY);
 
 	GW = blocksX * blockXsize + (blocksX + 1) * pad;
 	GH = blocksY * blockYsize + (blocksY + 1) * pad;
 	width = GW;
 	height = GH;
-
-    //bool WLight, WCubic, WgtLight, WgtTriCubic;
-    //WLight is for write lighting output
-    //WgtLight is for ground truth of lighting output
-    //WCubic is for tricubic
-    //WgtTriCubic is for ground truth tricubic
-    //WisoSurface, WgtIsoSurface;
-    if(percentage == 100)
-    {
-		WCubic = false;
-		WLight = false;
-		WisoSurface = false;
-    	if(lightingCondition)
-    	{
-    		WgtLight = true;
-    		WgtTriCubic = false;
-    		WgtIsoSurface = false;
-    	}
-    	else if(cubic && cubicLight)
-    	{
-    		WgtTriCubic = true;
-			WgtLight = false;
-			WgtIsoSurface = false;
-    	}
-    	else if(isoSurface)
-    	{
-    		WgtTriCubic = false;
-    		WgtLight = false;
-    		WgtIsoSurface = true;
-    	}
-    }
-    else
-    {
-    	WgtLight = false;
-    	WgtTriCubic = false;
-    	WgtIsoSurface = false;
-    	if(lightingCondition)
-		{
-			WLight = true;
-			WCubic = false;
-			WisoSurface = false;
-		}
-		else if(cubic && cubicLight)
-		{
-			WCubic = true;
-			WLight = false;
-			WisoSurface = false;
-		}
-		else if(isoSurface)
-		{
-			WCubic = false;
-			WLight = false;
-			WisoSurface = true;
-		}
-    }
-
-    //This portion is for the reconstruction setup, Ghost height and width;
-
-//    writeOutput(1, true, false, true);
+    int lengthOfDatainFloat = GW * GH * sizeof(float);
+    int lengthOfDatainInt = GH * GW * sizeof(int);
+//	onPixel = blocksX * blocksY * 32;
 
     printf("Window Size is: %d by %d\n", GW,GH);
     sprintf(H,"%d", GH);
@@ -1584,30 +1661,48 @@ int main(int argc, char **argv)
 
     strcat(patternInformation,"_patternInfo.txt");
     patternInfo = fopen(patternInformation,"r");
-    fscanf(patternInfo, "%d", &pixelCount); //total number of active pixels
-    printf("Using pixels: %d\nPath: %s\n", pixelCount,patternInformation);
+    fscanf(patternInfo, "%d", &stripePixels); //total number of active pixels
+    printf("Using pixels: %d\nPath: %s\n", stripePixels,patternInformation);
+
+// Pattern for stripes---------------------------------------------//
+    h_linear = (int *) malloc(sizeof(int)*stripePixels);
+    xPattern = (int *)malloc(sizeof(int) * stripePixels);
+    yPattern = (int *)malloc(sizeof(int) * stripePixels);
+    h_pattern = (int*)malloc(lengthOfDatainInt);
+    cudaMalloc(&d_linear, sizeof(int)*stripePixels);
+    cudaMalloc(&d_xPattern, sizeof(float) * stripePixels);
+    cudaMalloc(&d_yPattern, sizeof(float) * stripePixels);
+    if(cudaMalloc(&d_pattern, lengthOfDatainInt) != cudaSuccess)
+    {
+    	printf("cudaMalloc error for d_pattern");
+    }
+    printf("Total Number of Pixel is : %d\n", stripePixels);
+
+    loadPattern(h_pattern,h_linear, xPattern, yPattern, GH, GW, stripePixels);
+
+    cudaMemcpy(d_xPattern, xPattern, sizeof(int) * stripePixels, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_yPattern, yPattern, sizeof(int) * stripePixels, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_linear, h_linear, sizeof(int) * stripePixels, cudaMemcpyHostToDevice);
+    if(cudaMemcpy(d_pattern, h_pattern, sizeof(int) * GH * GW, cudaMemcpyHostToDevice) != cudaSuccess) //h_Pattern    if(cudaMemcpy(d_pattern, h_pattern, lengthOfDatainInt, cudaMemcpyHostToDevice) != cudaSuccess)
+    {
+    	printf("cudaMemcpy error for h_pattern\n");
+    	return -1;
+    }
 
 
-    h_linear = (int *) malloc(sizeof(int)*pixelCount);
-    cudaMalloc(&d_linear, sizeof(int)*pixelCount);
-
-    blockSize = dim3(blockXsize, blockYsize); //16,16
-    gridSize = dim3(blocksX, blocksY);
 //    gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
 
-//    gridVol = dim3(iDivUp(ceil(sqrt(pixelCount)),blockXsize), iDivUp(ceil(sqrt(pixelCount)),blockYsize));
-    gridVol = dim3(iDivUp(pixelCount,256));
-
-    printf("Number of thread launched: %d\n", gridVol.x*gridVol.y*blockXsize*blockYsize);
+//    gridVol = dim3(iDivUp(ceil(sqrt(stripePixels)),blockXsize), iDivUp(ceil(sqrt(stripePixels)),blockYsize));
+    gridVolStripe = dim3(iDivUp(stripePixels,256));
+    printf("Number of thread launched for stripe Pixels: %d\n", gridVolStripe.x*256);
 
     gridBlend = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
-//    gridSize = dim3(iDivUp(pixelCount, blockXsize), iDivUp(pixelCount, blockYsize));
-    printf("Volume Block: %d by %d\nReconstruction Block: %d by %d\n", gridVol.x , gridVol.y, gridSize.x, gridSize.y);
+//    gridSize = dim3(iDivUp(stripePixels, blockXsize), iDivUp(stripePixels, blockYsize));
+    printf("Reconstruction Block: %d by %d\n", gridSize.x, gridSize.y);
 
 
     //memory allocation goes here
-    int lengthOfDatainFloat = GW * GH * sizeof(float);
-    int lengthOfDatainInt = GH * GW * sizeof(int);
+
 
     in_red = (float *)malloc(lengthOfDatainFloat);
     in_green = (float *)malloc(lengthOfDatainFloat);
@@ -1619,10 +1714,11 @@ int main(int argc, char **argv)
     h_red = (float *)malloc(lengthOfDatainFloat);
     h_green = (float *)malloc(lengthOfDatainFloat);
     h_blue = (float *)malloc(lengthOfDatainFloat);
+    h_gray = (float *)malloc(lengthOfDatainFloat);
 
-    h_vol = (float *)malloc(sizeof(float)*7); //6 for vol->height,width,depth,x,y,z space, pixelCount
+    h_vol = (float *)malloc(sizeof(float)*7); //6 for vol->height,width,depth,x,y,z space, stripePixels
     cudaMalloc(&d_vol, sizeof(float)*7);
-    cudaMalloc(&d_temp, sizeof(float)*pixelCount);
+    cudaMalloc(&d_temp, sizeof(float)*stripePixels);
     cudaMalloc(&d_red, lengthOfDatainFloat);
     cudaMalloc(&d_green, lengthOfDatainFloat);
     cudaMalloc(&d_blue, lengthOfDatainFloat);
@@ -1636,6 +1732,7 @@ int main(int argc, char **argv)
 	cudaMalloc(&res_opacity, lengthOfDatainFloat);
 	cudaMalloc(&device_x,lengthOfDatainFloat);
 	cudaMalloc(&device_p,lengthOfDatainFloat);
+	cudaMalloc(&d_gray,lengthOfDatainFloat);
 
 	cudaEventCreate(&volStart);
 	cudaEventCreate(&volStop);
@@ -1644,45 +1741,34 @@ int main(int argc, char **argv)
 	cudaEventCreate(&blendStart);
 	cudaEventCreate(&blendStop);
 
-    h_pattern = (int*)malloc(lengthOfDatainInt);
-    if(cudaMalloc(&d_pattern, lengthOfDatainInt) != cudaSuccess)
-    {
-    	printf("cudaMalloc error for d_pattern");
-    }
 
-    xPattern = (int *)malloc(sizeof(int) * pixelCount);
-    yPattern = (int *)malloc(sizeof(int) * pixelCount);
-    h_temp = (float *)malloc(sizeof(float) * pixelCount );
-    for(int i=0; i<GH*GW; i++)
+
+    h_temp = (float *)malloc(sizeof(float) * stripePixels );
+    h_linPattern = (int *)malloc(sizeof(int) * GH * GW);
+    h_X = (int *)malloc(sizeof(int) * GH * GW);
+    h_Y = (int *)malloc(sizeof(int) * GH * GW);
+    host_linear = (int *)malloc(sizeof(int) * GH * GW);
+    cudaMalloc(&d_linPattern, sizeof(int) * GH * GW);
+    for(int i=0; i<GH * GW; i++)
     {
+    	h_linPattern[i] = 0;
     	temp[i] = 0.0f;
     }
+    cudaMemcpy(d_linPattern, h_linPattern, sizeof(int) * GH * GW, cudaMemcpyHostToDevice);
     cudaMemcpy(device_x, temp, sizeof(float) * GH * GW, cudaMemcpyHostToDevice);
     cudaMemcpy(device_p, temp, sizeof(float) * GH * GW, cudaMemcpyHostToDevice);
     cudaMemcpy(d_red, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(d_green, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(d_blue, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_gray, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(d_opacity, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(res_red, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(res_green, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(res_blue, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
     cudaMemcpy(res_opacity, temp, lengthOfDatainFloat, cudaMemcpyHostToDevice);
-    cudaMalloc(&d_xPattern, sizeof(float) * pixelCount);
-    cudaMalloc(&d_yPattern, sizeof(float) * pixelCount);
-
-    printf("Total Number of Pixel is : %d\n", pixelCount);
-    loadPattern(h_pattern,h_linear, xPattern, yPattern, GH, GW, pixelCount);
-
     kernel = (float *)malloc(sizeof(float) * kernelH * kernelW);
     loadKernel(kernel, lambda,kernelH*kernelW);
-    cudaMemcpy(d_xPattern, xPattern, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_yPattern, yPattern, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_linear, h_linear, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
-    if(cudaMemcpy(d_pattern, h_pattern, sizeof(int) * GH * GW, cudaMemcpyHostToDevice) != cudaSuccess) //h_Pattern    if(cudaMemcpy(d_pattern, h_pattern, lengthOfDatainInt, cudaMemcpyHostToDevice) != cudaSuccess)
-    {
-    	printf("cudaMemcpy error for h_pattern\n");
-    	return -1;
-    }
+
 
     // Reconstruction Testing------------------------------------------------
 /*
@@ -1700,25 +1786,28 @@ int main(int argc, char **argv)
     writeOutputReconstruction(temp_red, temp_green,temp_blue);
 */
     //Variance Testing------------------------------------------------------------
-
-    h_var_r = (float *)malloc(sizeof(float) * gridSize.x * gridSize.y);
-    h_varPriority= (int *)malloc(sizeof(int) * gridSize.x * gridSize.y);
-    if(cudaMalloc(&d_var_r, sizeof(float)*gridSize.x*gridSize.y) != cudaSuccess)
+    onPixel = 32 * gridSize.x * gridSize.y;
+    printf("Initial turned on pixels: %d\n", onPixel);
+    gridVol = gridSize;
+    printf("Grid configuration for volume: %d by %d\n", gridVol.x, gridVol.y);
+    h_varPriority= (int *)malloc(sizeof(int) * gridVol.x * gridVol.y);
+    cudaMalloc(&d_var, sizeof(float)*gridVol.x * gridVol.y);
+    h_var = (float *)malloc(sizeof(float)*gridVol.x * gridVol.y);
+    for(int i =0; i<gridVol.x * gridVol.y; i++)
     {
-    	printf("cudaMalloc for variance is error\n");
+    	h_varPriority[i] = 0;
+    	h_var[i] = 0.0;
     }
-    if(cudaMalloc(&d_varPriority, sizeof(int)*gridSize.x*gridSize.y) != cudaSuccess)
+    if(cudaMalloc(&d_varPriority, sizeof(int)*gridVol.x * gridVol.y) != cudaSuccess)
     {
     	printf("cudaMalloc for variance priority is error\n");
     }
-    for(int i=0; i<gridSize.x*gridSize.y; i++)
+    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x * gridVol.y, cudaMemcpyHostToDevice) != cudaSuccess)
     {
-    	h_varPriority[i] = 1;
+    	printf("main: Variance Priority memory copy error\n");
     }
-    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridSize.x*gridSize.y, cudaMemcpyHostToDevice) != cudaSuccess)
-    {
-    	printf("Variance Priority memory copy error\n");
-    }
+    cudaMemcpy(d_var, h_var, sizeof(int)*gridVol.x * gridVol.y, cudaMemcpyHostToDevice);
+
 
 /*
     FILE *fpVar = fopen("textFiles/varianceInput.txt","r");
@@ -1739,6 +1828,61 @@ int main(int argc, char **argv)
     }
     writeVarianceResult(h_var_r);
 */
+
+
+
+
+    if(percentage == 100)
+       {
+   		WCubic = false;
+   		WLight = false;
+   		WisoSurface = false;
+       	if(lightingCondition)
+       	{
+       		WgtLight = true;
+       		WgtTriCubic = false;
+       		WgtIsoSurface = false;
+       	}
+       	else if(cubic && cubicLight)
+       	{
+       		WgtTriCubic = true;
+   			WgtLight = false;
+   			WgtIsoSurface = false;
+       	}
+       	else if(isoSurface)
+       	{
+       		WgtTriCubic = false;
+       		WgtLight = false;
+       		WgtIsoSurface = true;
+       	}
+       }
+       else
+       {
+       	WgtLight = false;
+       	WgtTriCubic = false;
+       	WgtIsoSurface = false;
+       	if(lightingCondition)
+   		{
+   			WLight = true;
+   			WCubic = false;
+   			WisoSurface = false;
+   		}
+   		else if(cubic && cubicLight)
+   		{
+   			WCubic = true;
+   			WLight = false;
+   			WisoSurface = false;
+   		}
+   		else if(isoSurface)
+   		{
+   			WCubic = false;
+   			WLight = false;
+   			WisoSurface = true;
+   		}
+       }
+
+
+
 
 
 #if defined(__linux__)
@@ -1777,7 +1921,7 @@ int main(int argc, char **argv)
     h_vol[3] = x_spacing;
     h_vol[4] = y_spacing;
     h_vol[5] = z_spacing;
-    h_vol[6] = pixelCount;
+    h_vol[6] = stripePixels;
 
     cudaMemcpy(d_vol, h_vol, sizeof(float)*7, cudaMemcpyHostToDevice);
 
