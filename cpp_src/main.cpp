@@ -43,7 +43,7 @@ inline void __cudaCheckError( const char *file, const int line )
 void writeVarianceResult(float *data)
 {
 
-	FILE *fp = fopen("textFiles/redVariance.txt","w");
+	FILE *fp = fopen("textFiles/Variance.txt","w");
 	if(!fp)
 	{
 		printf("Error in variance writing file\n");
@@ -62,44 +62,40 @@ void writeVarianceResult(float *data)
 void writeTimer()
 {
 	FILE *timerFile;
-	char path[50] = "textFiles/Pattern/";
+	char path[50] = "Results/";
 	char dimX[10];
 	char dimY[10];
-	char percent[10];
 	char name[150]="";
-	char missingPixel[150]="";
 	char stepSizes[150]="";
 	char triVSlight[150]="";
-	sprintf(percent, "%d", percentage);
 	sprintf(dimY,"%d", GH);
 	sprintf(dimX,"%d", GW);
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
-	strcat(path,"_");
-	strcat(path,percent);
 	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
 	strcat(name,path);
 //	strcat(name,"/Result/timing/");
 	if(isoSurface)
 	{
-		strcat(name,"/Result/isoSurface/timing/");
+		strcat(name,"isoSurface/");
 	}
-	else if(lightingCondition)
+	else if(lightingCondition && linearFiltering)
 	{
-		strcat(name,"/Result/lighting/timing/");
+		strcat(name,"triLinear/lightingOn/");
 	}
-	else if(cubic)
+	else if(!lightingCondition && linearFiltering)
 	{
-		strcat(name,"/Result/tricubic/timing/");
+		strcat(name,"triLinear/lightingOff/");
 	}
-/*
-	strcat(missingPixel,name);
-	strcat(missingPixel,"pixVsTime/timer.txt");
-
-	strcat(stepSizes,name);
-	strcat(stepSizes,"stepVsTime/timer.txt");
-*/
+	else if(cubic && !cubicLight)
+	{
+		strcat(name,"triCubic/lightingOff/");
+	}
+	else if(cubic && cubicLight)
+	{
+		strcat(name,"triCubic/lightingOn/");
+	}
 
 	strcat(name,"timer.txt");
 	printf("Timing file: %s\n", name);
@@ -114,152 +110,87 @@ void writeTimer()
 	fclose(timerFile);
 }
 //writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
-void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, bool WisoSurface, bool gtIsoSurface, float *h_red, float *h_green, float *h_blue)
+//WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
+void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool WCubicLight, bool WisoSurface, float *h_red, float *h_green, float *h_blue)
 {
 	FILE *R, *G, *B;
 	FILE *binaryFile;
 	rgb p;
-	char path[50] = "textFiles/Pattern/";
+	char path[50] = "Results/";
+	char frame[10]="";
+	char rgbFile[20]="";
 	char dimX[10];
 	char dimY[10];
-	char percent[10];
-	char lighting[100]="";
-	char groundTruth[100]="";
-	char tricubic[100]="";
-	char gtLighting[120]="";
-	char gtCubic[120] = "";
-	char red[40] = "";
-	char green[40]="";
-	char blue[40] = "";
-	char redFile[140] = "";
-	char greenFile[140]="";
-	char blueFile[140] = "";
-	char rgbFile[140] = "";
-	char rgbLight[140] ="";
-	char rgbLightGT[140] ="";
-	char rgbTricubic[140] = "";
-	char rgbTricubicGT[140] = "";
-	char rgbIsoSurface[140] = "";
-	char rgbIsoSurfaceGT[140] = "";
-	char bin[50]="";
-	char rgbBinFile[150]="";
-	char frame[10]="";
+	char trilinearPath[100]="";
+	char trilinearLightOn[150]="";
+	char trilinearLightOff[150]="";
+	char tricubicPath[100]="";
+	char tricubicLightOn[100]="";
+	char tricubicLightOff[100]="";
+	char isoSurfacePath[100]="";
+	char file[150]="";
 
 
 	sprintf(frame, "%d", frameNo);
-	sprintf(percent, "%d", percentage);
 	sprintf(dimY,"%d", GH);
 	sprintf(dimX,"%d", GW);
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
-	strcat(path,"_");
-	strcat(path,percent);
-	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
-	strcat(red,"red_");
-	strcat(red,frame);
-	strcat(red,".txt");
-	strcat(rgbFile, path);
-	strcat(rgbFile,"Result/"); // textFiles/Pattern/516by516_50/Result/
-	strcat(green,"green_");
-	strcat(green,frame);
-	strcat(green, ".txt");
-	strcat(blue,"blue_");
-	strcat(blue,frame);
-	strcat(blue, ".txt");
+	strcat(path,"/"); //path = Results/516by516/
+//	printf("Path: %s\n", path);
+	strcat(rgbFile,"rgb_");
+	strcat(rgbFile,frame);
+	strcat(rgbFile,".bin"); //rgbFile = rgb_0.bin
 
-	strcat(bin,"rgb_");
-	strcat(bin,frame);
-	strcat(bin,".bin");
+	strcat(trilinearPath, path);
+	strcat(trilinearPath, "triLinear/");
+	strcat(trilinearLightOn, trilinearPath);
+	strcat(trilinearLightOn, "lightingOn/");
+	strcat(trilinearLightOff, trilinearPath);
+	strcat(trilinearLightOff, "lightingOff/");
 
-	strcat(lighting, path);
-	strcat(lighting, "Result/");
-	strcat(lighting, "lighting/"); //textFiles/Pattern/516by516_50/Result/tricubic/
-	strcat(gtLighting,lighting);
-	strcat(gtLighting,"groundTruth/");
 
-	strcat(rgbLight,rgbFile);	// textFiles/Pattern/516by516_50/Result/
-	strcat(rgbLight,"lighting/");	// textFiles/Pattern/516by516_50/Result/lighting/
-	strcat(rgbLightGT,rgbLight);
-	strcat(rgbLightGT,"groundTruth/");
+	strcat(tricubicPath,path);	// textFiles/Pattern/516by516_50/Result/
+	strcat(tricubicPath,"triCubic/");	// textFiles/Pattern/516by516_50/Result/lighting/
+	strcat(tricubicLightOn, tricubicPath);
+	strcat(tricubicLightOn,"lightingOn/");
+	strcat(tricubicLightOff, tricubicPath);
+	strcat(tricubicLightOff,"lightingOff/");
 
-	strcat(tricubic, path);
-	strcat(tricubic, "Result/");
-	strcat(tricubic, "tricubic/");
-	strcat(gtCubic, tricubic);
-	strcat(gtCubic,"groundTruth/");
+	strcat(isoSurfacePath, path);
+	strcat(isoSurfacePath, "isoSurface/");
 
-	strcat(rgbTricubic,rgbFile);
-	strcat(rgbTricubic,"tricubic/");
-	strcat(rgbTricubicGT, rgbTricubic);
-	strcat(rgbTricubicGT, "groundTruth/");
 
-	strcat(rgbIsoSurface,rgbFile);	// textFiles/Pattern/516by516_50/Result/
-	strcat(rgbIsoSurface,"isoSurface/");	// textFiles/Pattern/516by516_50/Result/lighting/
-	strcat(rgbIsoSurfaceGT, rgbIsoSurface);
-	strcat(rgbIsoSurfaceGT, "groundTruth/");
-
-	if(gtLight)
+	if(WLinear)
 	{
-		strcat(redFile, gtLighting);
-		strcat(redFile, red);
-		strcat(greenFile, gtLighting);
-		strcat(greenFile, green);
-		strcat(blueFile, gtLighting);
-		strcat(blueFile, blue);
-
-		strcat(rgbLightGT,bin);
-		strcat(rgbBinFile,rgbLightGT);
+		strcat(trilinearLightOff,rgbFile);
+		strcat(file, trilinearLightOff);
 	}
-	else if(lightingCondition)
+	else if(WLinearLight)
 	{
-		strcat(redFile, lighting);
-		strcat(redFile, red);
-		strcat(greenFile, lighting);
-		strcat(greenFile, green);
-		strcat(blueFile, lighting);
-		strcat(blueFile, blue);
-
-		strcat(rgbLight,bin);
-		strcat(rgbBinFile,rgbLight);
+		strcat(trilinearLightOn,rgbFile);
+		strcat(file, trilinearLightOn);
 	}
-	else if(gtTriCubic)
+	else if(WCubic)
 	{
-		strcat(redFile, gtCubic);
-		strcat(redFile, red);
-		strcat(greenFile, gtCubic);
-		strcat(greenFile, green);
-		strcat(blueFile, gtCubic);
-		strcat(blueFile, blue);
-
-		strcat(rgbTricubicGT,bin);
-		strcat(rgbBinFile,rgbTricubicGT);
+		strcat(tricubicLightOff, rgbFile);
+		strcat(file, tricubicLightOff);
 	}
-	else if(triCubic)
+	else if(WCubicLight)
 	{
-		strcat(redFile, tricubic);
-		strcat(redFile, red);
-		strcat(greenFile, tricubic);
-		strcat(greenFile, green);
-		strcat(blueFile, tricubic);
-		strcat(blueFile, blue);
-
-		strcat(rgbTricubic,bin);
-		strcat(rgbBinFile,rgbTricubic);
+		strcat(trilinearLightOn,rgbFile);
+		strcat(file, trilinearLightOn);
 	}
 	else if(WisoSurface)
 	{
-		strcat(rgbIsoSurface,bin);
-		strcat(rgbBinFile,rgbIsoSurface);
+		strcat(isoSurfacePath,rgbFile);
+		strcat(file, isoSurfacePath);
 	}
-	else if(gtIsoSurface)
-	{
-		strcat(rgbIsoSurfaceGT,bin);
-		strcat(rgbBinFile,rgbIsoSurfaceGT);
-	}
-//	printf("[writeOutput]: %s\n", rgbBinFile);
 
-	binaryFile = fopen(rgbBinFile,"wb");
+	printf("[writeOutput]: %s\n", file);
+
+	binaryFile = fopen(file,"wb");
 	if(!binaryFile)
 	{
 		printf("Binary File Error\n");
@@ -276,29 +207,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 	}
 	fclose(binaryFile);
 
-/*
-	R = fopen(redFile,"w");
-	G = fopen(greenFile,"w");
-	B = fopen(blueFile,"w");
 
-	if(!R || !G || !B)
-	{
-		printf("File writing error");
-	}
-
-	for(int i = 0; i<GW*GH; i++)
-	{
-		fprintf(R, "%f\n", h_red[i]);
-		fprintf(G, "%f\n", h_green[i]);
-		fprintf(B, "%f\n", h_blue[i]);
-	}
-
-
-	printf("\nWriting output done\n");
-	fclose(R);
-	fclose(G);
-	fclose(B);
-*/
 }
 
 
@@ -721,8 +630,9 @@ void varianceAnalysis(float *in, int *out)
 			min = in[i];
 		}
 	}
-	division = (max - min)/float(group);
+//	division = (max - min)/float(group);
 //		printf("division: %f\n", division);
+	/*
 	for(int i=0; i<gridSize.x*gridSize.y; i++)
 	{
 		if(in[i]>=min && in[i]<division+min)
@@ -761,13 +671,14 @@ void varianceAnalysis(float *in, int *out)
 			seventy++;
 		}
 	}
+	*/
 
 	printf("Min, Max: %f %f\n", min, max);
 
-	printf("10: %d\t20: %d\t30: %d\n", ten, twenty, thirty);
-	printf("40: %d\t50: %d\t60: %d\t 70: %d\n", fourty, fifty, sixty, seventy);
-	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
-			fourty + fifty + sixty + seventy);
+//	printf("10: %d\t20: %d\t30: %d\n", ten, twenty, thirty);
+//	printf("40: %d\t50: %d\t60: %d\t 70: %d\n", fourty, fifty, sixty, seventy);
+//	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
+//			fourty + fifty + sixty + seventy);
 
 //	onPixel = ten*26 + twenty*51 + thirty *76 + fourty*102 + fifty*128 + sixty*153 + seventy*179 + eighty*204 + ninety*229;
 //	printf("Variance Analysis: #ON: %d\n", onPixel);
@@ -832,28 +743,22 @@ void render()
     checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_output, &num_bytes, cuda_pbo_resource));
 
 
-    cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+
 
     if(frameCounter<=100)
     {
     	if(writeMode)
     	{
-    		writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
+    	    cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    	    cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    	    cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    		//void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool WCubicLight, bool WisoSurface, float *h_red, float *h_green, float *h_blue)
+    		writeOutput(frameCounter, WLinear, WLinearLight, WCubic, WCubicLight, WisoSurface, h_red, h_green, h_blue);
     	}
     }
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
-    if(reconstruct)
-    {
-    	blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
-    }
-    else
-    {
-    	blendFunction(gridBlend, blockSize, d_output,d_vol, d_red, d_green, d_blue, height, width, d_xPattern, d_yPattern, d_linear);
-    }
-
+    blendFunction(gridBlend, blockSize, d_varPriority, reconstruct, d_linPattern, d_output, d_red, d_green, d_blue, res_red, res_green, res_blue, height, width);
     cudaEventRecord(blendStop, 0);
     cudaEventSynchronize(blendStop);
     cudaEventElapsedTime(&blendTimer, blendStart, blendStop);
@@ -923,54 +828,17 @@ void display()
     invViewMatrix[10] = modelView[10];
     invViewMatrix[11] = modelView[14];
 
-//    generateAddress(gridSize, blockSize, d_varPriority, d_X, d_Y, d_linPattern);
-//    cudaMemcpy(h_linPattern, d_linPattern, sizeof(int) * height * width, cudaMemcpyDeviceToHost);
-//
-//
-//    extractAddress(h_linPattern);
-//    copyAddress();
-//    writeLinearAddress(h_linPattern);
-//    gridRender = dim3(iDivUp(onPixel,256));
-
     cudaEventRecord(volStart, 0);
     render_kernel(gridVol, gridVolStripe, blockSize, d_var, d_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol,d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
        			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel, stripePixels);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
-/*
-    if(cudaMemcpy(h_linPattern, d_linPattern, sizeof(int)*width*height, cudaMemcpyDeviceToHost) != cudaSuccess)
-    {
-    	printf("Display: Pattern copy error\n");
-    }
 
-    writeLinearAddress(h_linPattern);
-*/
-
-
-
-//    cudaMemcpy(h_red, d_gray, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-//    cudaMemcpy(h_green, d_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-//    cudaMemcpy(h_blue, d_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-//    writeOutputVolume(h_red, h_green, h_blue);
-//    varianceFunction(gridSize, blockSize, d_gray, d_var, dataH, dataW);
-//    if(cudaMemcpy(h_var, d_var, sizeof(float)*gridVol.x*gridVol.y, cudaMemcpyDeviceToHost) != cudaSuccess)
-//    {
-//    	printf("Variance memory copy error\n");
-//    }
-////    writeVarianceResult(h_var);
-//
-//    varianceAnalysis(h_var,h_varPriority);
-//    if(cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyHostToDevice) != cudaSuccess)
-//    {
-//    	printf("Variance Priority memory copy error\n");
-//    }
-
-//    free(h_X);
-//    free(h_Y);
-//    dim3 addGrid = (iDivUp(width,blockSize.x), iDivUp(height,blockSize.y));
-
-
+    cudaMemcpy(h_var, d_var, sizeof(float) * gridVol.x * gridVol.y, cudaMemcpyDeviceToHost);
+//    writeVarianceResult(h_var);
+    varianceAnalysis(h_var, h_varPriority);
+    cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyHostToDevice);
 
     cudaEventRecord(reconStart, 0);
 
@@ -993,15 +861,8 @@ void display()
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
 
 
-
-//   	printf("Recon time: %f ms\n", reconTimer);
-
    	render();
-    // display results
-//    glClear(GL_COLOR_BUFFER_BIT);
-//    glClearColor(0.0f, 0.0f, 0.0f, 1.0);
 
-    // draw image from PBO
     glDisable(GL_DEPTH_TEST);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -1079,8 +940,11 @@ void keyboard(unsigned char key, int x, int y)
             #if defined (__APPLE__) || defined(MACOSX)
                 exit(EXIT_SUCCESS);
             #else
-                printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
-//                writeTimer();
+                printf("\nTotal number of generated frame is: %d\nTotal time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+                if(writeMode)
+                {
+                    writeTimer();
+                }
                 glutDestroyWindow(glutGetWindow());
                 return;
             #endif
@@ -1602,16 +1466,14 @@ int main(int argc, char **argv)
 	tenP = loadPatternBlock();
 	adaptiveSample2D(tenP);
 
-	for(int i= 0; i<1;i++)
-	{
-		for(int j =0; j<256; j++)
-		{
-//	int i=0, j=0;
-			printf("[%d,%d] = %d,%d  ",i, j, patternMatrix[i][j].x,patternMatrix[i][j].y);
-
-		}
-		printf("\n");
-	}
+//	for(int i= 0; i<1;i++)
+//	{
+//		for(int j =0; j<256; j++)
+//		{
+//			printf("[%d,%d] = %d,%d  ",i, j, patternMatrix[i][j].x,patternMatrix[i][j].y);
+//		}
+//		printf("\n");
+//	}
 	copyConstantTest_1( 1, 256, patternMatrix);
 
 	twentyP = adaptiveSample(tenP, 32);
@@ -1830,57 +1692,49 @@ int main(int argc, char **argv)
 */
 
 
+//WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
 
+    if(linearFiltering && lightingCondition)
+    {
+    	WLinearLight = true;
+    	WLinear = false;
+    	WCubic = false;
+    	WCubicLight = false;
+    	WisoSurface = false;
 
-    if(percentage == 100)
-       {
-   		WCubic = false;
-   		WLight = false;
-   		WisoSurface = false;
-       	if(lightingCondition)
-       	{
-       		WgtLight = true;
-       		WgtTriCubic = false;
-       		WgtIsoSurface = false;
-       	}
-       	else if(cubic && cubicLight)
-       	{
-       		WgtTriCubic = true;
-   			WgtLight = false;
-   			WgtIsoSurface = false;
-       	}
-       	else if(isoSurface)
-       	{
-       		WgtTriCubic = false;
-       		WgtLight = false;
-       		WgtIsoSurface = true;
-       	}
-       }
-       else
-       {
-       	WgtLight = false;
-       	WgtTriCubic = false;
-       	WgtIsoSurface = false;
-       	if(lightingCondition)
-   		{
-   			WLight = true;
-   			WCubic = false;
-   			WisoSurface = false;
-   		}
-   		else if(cubic && cubicLight)
-   		{
-   			WCubic = true;
-   			WLight = false;
-   			WisoSurface = false;
-   		}
-   		else if(isoSurface)
-   		{
-   			WCubic = false;
-   			WLight = false;
-   			WisoSurface = true;
-   		}
-       }
-
+    }
+    else if(linearFiltering && !lightingCondition)
+    {
+    	WLinear = true;
+    	WLinearLight = false;
+    	WCubic = false;
+    	WCubicLight = false;
+    	WisoSurface = false;
+    }
+    else if(cubic && cubicLight)
+    {
+    	WCubic = false;
+    	WCubicLight = true;
+    	WLinear = false;
+    	WLinearLight = false;
+    	WisoSurface = false;
+    }
+    else if(cubic && !cubicLight)
+        {
+        	WCubic = true;
+        	WCubicLight = false;
+        	WLinear = false;
+        	WLinearLight = false;
+        	WisoSurface = false;
+        }
+    else if(isoSurface)
+    {
+    	WisoSurface = true;
+    	WCubic = false;
+    	WCubicLight = false;
+    	WLinear = false;
+    	WLinearLight = false;
+    }
 
 
 

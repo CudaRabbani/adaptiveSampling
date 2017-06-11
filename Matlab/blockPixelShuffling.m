@@ -53,9 +53,9 @@ for i=2:n
     fclose(fileID);
     
 %     figure;
-     imshow(mask);
-     pause;
-     hold on;
+%     imshow(mask);
+%     pause;
+%     hold on;
 %     title(percentage);
     
     

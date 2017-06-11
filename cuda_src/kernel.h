@@ -25,7 +25,7 @@ void render_kernel(dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_va
 		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
 		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, int *d_linPattern, int *d_X, int *d_Y, int onPixel, int stripePixels);
 void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix);
-void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *res_red, float *res_green, float *res_blue, int imageH, int imageW, int *d_xPattern, int *d_yPattern, int *d_linear);
+void blendFunction(dim3 grid, dim3 block,int *d_varPriority, bool reconstruct, int *d_linPattern, uint *d_output, float *d_res, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageH, int imageW);
 //void initPixelBuffer();
 //    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
 int iDivUp(int a, int b);

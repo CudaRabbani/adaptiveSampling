@@ -969,11 +969,21 @@ __global__ void d_renderFirst(float *d_var, int *d_varPriority, float *d_vol, fl
 		if(localIndex == 0)
 		{
 			d_var[bid] = variance;
-			d_varPriority[bid] = 3;
-			__syncthreads();
+			int v = (int(variance/0.20)*10)%7;
+//			printf("[%d] V: %f -> %d\n", bid, variance, v);
+/*			if(v>6)
+			{
+				v = v%7;
+				printf("Bid: %d\t %d\n", bid,v);
+			}*/
+//			d_varPriority[bid] = 3;
+//			__syncthreads();
+
+
 //			printf("bidx: %d\t bidy: %d\tBID: %d var: %f\n", blockIdx.x, blockIdx.y, bid, d_varPriority[bid]);
 		}
 		d_linPattern[tempLin] = 1;
+		d_var[tempLin] = 0.0f;
 
 	}
 
@@ -1005,6 +1015,7 @@ __global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, f
 //		d_red[tempLin] = 0.5f;
 //		d_green[tempLin] = 0.5f;
 //		d_blue[tempLin] = 0.5f;
+//		d_varPriority[bid] = 0;
 		return;
 	}
 	else
@@ -1016,6 +1027,7 @@ __global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, f
 		volumeRender(tempX, tempY, tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
 				density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
 		d_linPattern[tempLin] = 1;
+//		d_varPriority[bid] = 0;
 	}
 
 
@@ -1438,32 +1450,55 @@ void render_kernel(dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_va
 
 }
 //d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear
-__global__ void blend(uint *d_output,float *d_vol, float *res_red, float *res_green, float *res_blue, int imageW, int imageH, int *d_xPattern, int *d_yPattern, int *d_linear)
+__global__ void blend(int *d_varPriority, bool reconstruct, int *d_linPattern, uint *d_output,float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH)
 {
 
 	int x = blockIdx.x*blockDim.x + threadIdx.x;
 	int y = blockIdx.y*blockDim.y + threadIdx.y;
+	int localIndex = threadIdx.x + threadIdx.y * TILE_W;
 	if((x>=imageW)||(y>=imageH))
 		return;
 	int index = x + y * imageW;
 	float4 temp = make_float4(0.0f);
-	temp.x = res_red[index];
-	temp.y = res_green[index];
-	temp.z = res_blue[index];
-	d_output[index] = rgbaFloatToInt(temp);
+
+	if(reconstruct)
+	{
+		temp.x = res_red[index];
+		temp.y = res_green[index];
+		temp.z = res_blue[index];
+		d_output[index] = rgbaFloatToInt(temp);
+		res_red[index] = 0.0f;
+		res_green[index] = 0.0f;
+		res_blue[index] = 0.0f;
+		d_linPattern[index] = 0;
+	}
+	else{
+		temp.x = d_red[index];
+		temp.y = d_green[index];
+		temp.z = d_blue[index];
+		d_output[index] = rgbaFloatToInt(temp);
+		d_red[index] = 0.0f;
+		d_green[index] = 0.0f;
+		d_blue[index] = 0.0f;
+		res_red[index] = 0.0f;
+		res_green[index] = 0.0f;
+		res_blue[index] = 0.0f;
+		d_linPattern[index] = 0;
+	}
+
+	int bid = blockIdx.x + blockIdx.y * gridDim.x;
+	if(localIndex == 0)
+	{
+		d_varPriority[bid] = 0;
+	}
+
 
 }
 //    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
-void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *res_red, float *res_green, float *res_blue, int imageH, int imageW, int *d_xPattern, int *d_yPattern, int *d_linear)
+void blendFunction(dim3 grid, dim3 block, int *d_varPriority, bool reconstruct, int *d_linPattern, uint *d_output, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageH, int imageW)
 {
-	blend<<<grid, block>>>(d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear);
+	blend<<<grid, block>>>(d_varPriority, reconstruct, d_linPattern, d_output, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH);
 }
-
-/*
-void reconstructionFunction(dim3 grid, dim3 block, float *data, float *red, float *green, float *blue,
- 		int *pattern, float *kernel, float *d_result,float *red_res, float *green_res, float *blue_res,
- 		int maskH, int maskW, int dataH, int dataW, float *device_x, float *device_p)
- */
 
 
 void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix)

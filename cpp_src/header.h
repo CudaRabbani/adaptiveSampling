@@ -117,7 +117,7 @@ float density = 1.00f;
 float brightness = 1.0f;
 float transferOffset = 0.00;//0.008; 0.19;//0.0f; //0.12
 float transferScale = 1.0f;
-bool linearFiltering = false;
+bool linearFiltering = true;
 float tstep = 0.005f;
 float tstepGrad = 0.01f;
 bool lightingCondition = false;
@@ -127,7 +127,7 @@ bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
 bool writeMode = false;
-bool WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface;
+bool WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
 bool reconstruct = false;
 
 GLuint pbo = 0;     // OpenGL pixel buffer object
