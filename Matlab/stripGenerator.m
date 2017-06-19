@@ -1,7 +1,7 @@
 clc;
 clear;
-r = 1024;
-c = 1024;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;

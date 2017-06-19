@@ -1079,7 +1079,7 @@ __global__ void d_renderFirst(float *d_var, int *d_varPriority, float *d_vol, fl
 
 }
 
-__global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue, float *res_red,
+__global__ void d_renderSecond(bool gt, float *d_var, int *d_varPriority, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue, float *res_red,
 		float *res_green, float *res_blue, int imageW, int imageH, float density, float brightness,float transferOffset, float transferScale, bool isoSurface,
 		float isoValue, bool lightingCondition, float tstep,bool cubic, bool cubicLight, int filterMethod, int *d_linPattern, int *d_X, int *d_Y, int onPixel)
 {
@@ -1096,8 +1096,18 @@ __global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, f
 	int row = d_varPriority[bid]; //int(d_var[bid]);//
 //	printf("second: %d\n", row);
 //	__syncthreads();
-	int local_x = d_temp[row][localIndex].x;
-	int local_y = d_temp[row][localIndex].y;
+	int local_x, local_y;
+	if(gt)
+	{
+		local_x = d_temp[6][localIndex].x;
+		local_y = d_temp[6][localIndex].y;
+	}
+	else
+	{
+		local_x = d_temp[row][localIndex].x;
+		local_y = d_temp[row][localIndex].y;
+	}
+
 	int tempX, tempY, tempLin;
 
 	if((local_x == 999) && (local_y ==999))
@@ -1492,7 +1502,7 @@ __global__ void d_render_stripe(int *d_pattern, int *d_linear, int *d_xPattern, 
 
 
 
-void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_var, int *d_varPriority, float *h_var, int *h_varPriority, int *d_pattern, int *d_linear, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue,
+void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, bool gt, float *d_var, int *d_varPriority, float *h_var, int *h_varPriority, int *d_pattern, int *d_linear, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue,
 		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
 		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, int *d_linPattern, int *d_X, int *d_Y, int onPixel, int stripePixels)
 {
@@ -1521,7 +1531,7 @@ void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 bl
 
 
 //	cudaDeviceSynchronize();
-	d_renderSecond<<<gridVol,blockSize, 0, blocks>>>(d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset, transferScale,
+	d_renderSecond<<<gridVol,blockSize, 0, blocks>>>(gt, d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset, transferScale,
 			isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel);
 //	cudaThreadSynchronize();
 

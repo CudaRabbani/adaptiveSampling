@@ -97,6 +97,15 @@ void writeTimer()
 		strcat(name,"triCubic/lightingOn/");
 	}
 
+	if(gt)
+	{
+		strcat(name,"groundTruth/");
+	}
+	else
+	{
+		strcat(name,"reconstructed/");
+	}
+
 	strcat(name,"timer.txt");
 	printf("Timing file: %s\n", name);
 
@@ -111,7 +120,7 @@ void writeTimer()
 }
 //writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
 //WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
-void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool WCubicLight, bool WisoSurface, float *h_red, float *h_green, float *h_blue)
+void writeOutput(int frameNo, bool gt, bool WLinear, bool WLinearLight, bool WCubic, bool WCubicLight, bool WisoSurface, float *h_red, float *h_green, float *h_blue)
 {
 	FILE *R, *G, *B;
 	FILE *binaryFile;
@@ -161,6 +170,23 @@ void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool
 	strcat(isoSurfacePath, path);
 	strcat(isoSurfacePath, "isoSurface/");
 
+	if(gt)
+	{
+		strcat(trilinearLightOn, "groundTruth/");
+		strcat(trilinearLightOff, "groundTruth/");
+		strcat(tricubicLightOn,"groundTruth/");
+		strcat(tricubicLightOff,"groundTruth/");
+		strcat(isoSurfacePath, "groundTruth/");
+	}
+	else
+	{
+		strcat(trilinearLightOn, "reconstructed/");
+		strcat(trilinearLightOff, "reconstructed/");
+		strcat(tricubicLightOn,"reconstructed/");
+		strcat(tricubicLightOff,"reconstructed/");
+		strcat(isoSurfacePath, "reconstructed/");
+	}
+
 
 	if(WLinear)
 	{
@@ -179,8 +205,8 @@ void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool
 	}
 	else if(WCubicLight)
 	{
-		strcat(trilinearLightOn,rgbFile);
-		strcat(file, trilinearLightOn);
+		strcat(tricubicLightOn,rgbFile);
+		strcat(file, tricubicLightOn);
 	}
 	else if(WisoSurface)
 	{
@@ -209,6 +235,8 @@ void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool
 
 
 }
+
+
 
 
 void calcuateTiming()
@@ -682,7 +710,7 @@ void render()
     	    cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     	    cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     		//void writeOutput(int frameNo, bool WLinear, bool WLinearLight, bool WCubic, bool WCubicLight, bool WisoSurface, float *h_red, float *h_green, float *h_blue)
-    		writeOutput(frameCounter, WLinear, WLinearLight, WCubic, WCubicLight, WisoSurface, h_red, h_green, h_blue);
+    		writeOutput(frameCounter, gt, WLinear, WLinearLight, WCubic, WCubicLight, WisoSurface, h_red, h_green, h_blue);
     	}
     }
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
@@ -758,7 +786,7 @@ void display()
     invViewMatrix[11] = modelView[14];
 
     cudaEventRecord(volStart, 0);
-    render_kernel(gridFirstPass, gridVol, gridVolStripe, blockSize, d_var, d_varPriority, h_var, h_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol,d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+    render_kernel(gridFirstPass, gridVol, gridVolStripe, blockSize, gt, d_var, d_varPriority, h_var, h_varPriority, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol,d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
        			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel, stripePixels);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
@@ -772,18 +800,13 @@ void display()
 
     cudaEventRecord(reconStart, 0);
 
-    if(percentage != 100)
+    if(!gt)
     {
-    	if(reconstruct)
-    	{
+//    	if(reconstruct)
+//    	{
     		reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_linPattern, d_varPriority, res_red, res_green, res_blue, height, width, device_x, device_p);
-/*
-    		cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    		cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    		cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    		writeOutputReconstruction(h_red, h_green, h_blue);
-*/
-    	}
+
+//    	}
     }
 //    cudaMemcpy(d_linPattern, h_linPattern, sizeof(int)*width*height, cudaMemcpyHostToDevice);
 //    cudaMemcpy(h_linPattern, d_linPattern, sizeof(int)*width*height, cudaMemcpyDeviceToHost);
@@ -1312,45 +1335,7 @@ void readAll()
 
 int main(int argc, char **argv)
 {
-	//-------------------------------------Constant Memory Test
-/*
-	int temp[7][256];
-	for(int i =0; i<7; i++)
-	{
-		for(int j=0; j<256; j++)
-		{
-			temp[i][j] = i * 256 + j;
-		}
-	}
 
-	dim3 block, grid;
-	block = dim3(256);
-	grid = dim3(1);
-
-	copyConstantTest(grid, block,temp);
-
-*/
-
-	//---------------------Atomic add-----------------------------
-/*
-	float *h_a = (float *)malloc(sizeof(float) * 256);
-	float *d_a;
-	float *h_ans, *d_ans;
-	h_ans = (float*)malloc(sizeof(float));
-	cudaMalloc(&d_ans, sizeof(float));
-	cudaMalloc(&d_a, sizeof(float)*256);
-
-	for(int i=0; i<256; i++)
-	{
-		h_a[i] = float(i);
-//		printf("%f ", h_a[i]);
-	}
-
-	cudaMemcpy(d_a, h_a, sizeof(float)*256, cudaMemcpyHostToDevice);
-	testAdd(1, 256, d_a, 256, d_ans);
-	cudaMemcpy(h_ans, d_ans, sizeof(float), cudaMemcpyDeviceToHost);
-	printf("Atomic add: %f\n", h_ans[0]);
-*/
 
 	FILE *volumeInfo, *patternInfo;
 	char volName[50];
@@ -1367,9 +1352,6 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-//    dataH = 1024;
-//    dataW = 1024;
-//    percentage = 30;
 
     readAll();
 
@@ -1377,15 +1359,15 @@ int main(int argc, char **argv)
     printf("\nPad: %d\n", pad);
 	blockXsize = 16;
 	blockYsize = 16;
-	tenP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	twentyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	thirtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	fortyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	fiftyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	sixtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	seventyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	eightyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
-	ninetyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	tenP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	twentyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	thirtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	fortyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	fiftyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	sixtyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	seventyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	eightyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
+//	ninetyP = (int*)malloc(sizeof(int)*blockXsize*blockYsize);
 
 	for(int i=0;i<7;i++)
 	{
@@ -1398,30 +1380,10 @@ int main(int argc, char **argv)
 
 	tenP = loadPatternBlock();
 	adaptiveSample2D(tenP);
-
-//	for(int i= 0; i<1;i++)
-//	{
-//		for(int j =0; j<256; j++)
-//		{
-//			printf("[%d,%d] = %d,%d  ",i, j, patternMatrix[i][j].x,patternMatrix[i][j].y);
-//		}
-//		printf("\n");
-//	}
 	copyConstantTest_1( 1, 256, patternMatrix);
 	copyConstantTestReconstruction(1, 256, patternMatrix);
 
-//	twentyP = adaptiveSample(tenP, 32);
-//	thirtyP = adaptiveSample(tenP, 64);
-//	fortyP = adaptiveSample(tenP, 96);
-//	fiftyP = adaptiveSample(tenP, 128);
-//	sixtyP = adaptiveSample(tenP, 160);
-//	seventyP = adaptiveSample(tenP, 192);
-//	eightyP = adaptiveSample(tenP, 224);
-//	copyAllPercentageRenderer(tenP, twentyP,thirtyP,fortyP,fiftyP,sixtyP,seventyP,eightyP);
 
-
-//    kernelH = 7;
-//    kernelW = 7;
 	float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));
 	float beforeCeilY = ((float)(dataH-pad)/(float)(blockYsize + pad));
 	float blocksXFloat = (ceil(beforeCeilX));

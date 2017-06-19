@@ -106,7 +106,7 @@ int frameCounter;
 
 
 float3 viewRotation;// = make_float3(-100.0, -100.0,100.0f);
-float3 viewTranslation = make_float3(0.0, 0.0, -3.0f); //-3.0f
+float3 viewTranslation = make_float3(0.0, 0.0, -2.4f); //-3.0f
 float invViewMatrix[12];
 int ox, oy;
 int buttonState = 0;
@@ -120,15 +120,18 @@ float transferScale = 1.0f;
 bool linearFiltering = true;
 float tstep = 0.005f;
 float tstepGrad = 0.01f;
-bool lightingCondition = false;
+bool lightingCondition = true;
 bool isoSurface =false;
 float isoValue = 0.208 ;
 bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
-bool writeMode = false;
+bool writeMode = true;
 bool WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
-bool reconstruct = false;
+
+bool gt = true;
+bool reconstruct = !gt;
+
 
 GLuint pbo = 0;     // OpenGL pixel buffer object
 GLuint tex = 0;     // OpenGL texture object

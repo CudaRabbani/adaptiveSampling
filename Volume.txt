@@ -1,4 +1,4 @@
-Data/foot.raw
+Data/skull.raw
 256
 256
 256
