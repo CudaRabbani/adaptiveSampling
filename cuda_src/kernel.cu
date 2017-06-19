@@ -14,6 +14,7 @@
 
 #include "deviceVars.h"
 #include "reconstruction.h"
+#include "constantMemory.h"
 
 #define TILE_W 16 //It has to be same size as block
 #define TILE_H 16 //It has to be same size as block
@@ -50,11 +51,11 @@ typedef struct
 {
 	float4 m[3];
 } float3x4;
-typedef struct
-{
-	int x;
-	int y;
-}int_2;
+//typedef struct
+//{
+//	int x;
+//	int y;
+//}int_2;
 
 __constant__ float3x4 c_invViewMatrix;  // inverse view matrix
 
@@ -275,6 +276,79 @@ void initCudaCubicSurface(const uchar* voxels, uint3 volumeSize)
 
 }
 
+
+void varianceAnalysis(float *in, int *out, dim3 gridVol)
+{
+	float min = 99999.0f, max = -99999.0f, sum = 0.0, avg = 0.0f, division = 0.0f;
+	int group = 7; //10p, 20p, 30p....90p
+	int ten = 0, twenty =0, thirty = 0, fourty = 0, fifty = 0, sixty = 0, seventy = 0,
+			eighty = 0, ninety = 0;
+	for(int i =0; i<gridVol.x*gridVol.y; i++)
+	{
+		if(in[i]>=max)
+		{
+			max = in[i];
+		}
+		if(in[i]<=min)
+		{
+			min = in[i];
+		}
+	}
+	division = (max - min)/float(group);
+//		printf("division: %f\n", division);
+
+	for(int i=0; i<gridVol.x*gridVol.y; i++)
+	{
+		if(in[i]>=min && in[i]<division+min)
+		{
+			out[i] = 0;
+			ten++;
+		}
+		else if(in[i]>=(division+min+0.000001) && in[i]<(division*2+min))
+		{
+			out[i] = 1;
+			twenty++;
+		}
+		else if(in[i]>=((division*2+min)+0.000001) && in[i]<(division*3+min))
+		{
+			out[i] = 2;
+			thirty++;
+		}
+		else if(in[i]>=((division*3+min)+0.000001) && in[i]<(division*4+min))
+		{
+			out[i] = 3;
+			fourty++;
+		}
+		else if(in[i]>=((division*3+min)+0.000001) && in[i]<(division*5+min))
+		{
+			out[i] = 4;
+			fifty++;
+		}
+//		else if(in[i]>=((division*5+min)+0.000001) && in[i]<(division*6+min))
+//		{
+//			out[i] = 5;
+//			sixty++;
+//		}
+		else
+		{
+			out[i] = 5;
+			sixty++;
+		}
+	}
+
+
+	printf("Min, Max: %f %f\n", min, max);
+
+	printf("10: %d\t20: %d\t30: %d\n", ten, twenty, thirty);
+	printf("40: %d\t50: %d\t60: %d\t 70: %d\n", fourty, fifty, sixty, seventy);
+	printf("Total block from variance analysis: %d\n", ten + twenty + thirty+
+			fourty + fifty + sixty);
+
+//	onPixel = ten*26 + twenty*51 + thirty *76 + fourty*102 + fifty*128 + sixty*153 + seventy*179 + eighty*204 + ninety*229;
+//	printf("Variance Analysis: #ON: %d\n", onPixel);
+}
+
+
 __device__ float max( float value )
 {
 	if( value < 0.0 )
@@ -376,10 +450,10 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 	return sample;
 }
 
-__global__ void generateAddress_One(int *variance, int *d_X, int *d_Y, int *d_linPattern)
+__global__ void generateAddress(int *variance, int *d_linPattern)
 {
 
-	__shared__ int pattern[TILE_H*TILE_W];
+//	__shared__ int pattern[TILE_H*TILE_W];
 	int GW = gridDim.x * blockDim.x + (gridDim.x + 1) * PAD;
 	int GH = gridDim.y * blockDim.y + (gridDim.y + 1) * PAD;
 	int STRIPSIZE = GW * (blockDim.y + PAD);
@@ -390,32 +464,24 @@ __global__ void generateAddress_One(int *variance, int *d_X, int *d_Y, int *d_li
 	int index = x + y * GW;
 	int localIndex = threadIdx.x + threadIdx.y * TILE_W;
 	int haloIndex = (blockIdx.y * STRIPSIZE) + (PAD * GW) + (threadIdx.y * GW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + threadIdx.x;
+	int row = variance[bid];
+	int local_x, local_y;
 
-	d_linPattern[haloIndex] = TenPercent[localIndex];
-	//	d_X[haloIndex] = haloIndex%GW;
-	//	d_Y[haloIndex] = haloIndex/GW;
+	local_x = d_temp[row][localIndex].x;
+	local_y = d_temp[row][localIndex].y;
 
-	/*
-	if(variance[bid] == 1)
+	if(local_x == 999 && local_y ==999)
 	{
-		linear[haloIndex] = TenPercent[localIndex];
-//		linear[index] = index;
 		return;
+		//d_linPattern[haloIndex] = 0;
+	}
+	else{
+		int lin = (blockIdx.y * STRIPSIZE) + (PAD * GW) + (local_y * GW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + local_x;
+		d_linPattern[lin] = 1;
 	}
 
-	else if(variance[bid] == 2)
-	{
-		linear[haloIndex] =TwentyPercent[localIndex] || TenPercent[localIndex];
-//		linear[index] = index;
-		return;
-	}
-	else if(variance[bid] == 3)
-	{
-		linear[haloIndex] = ThirtyPercent[localIndex] || TenPercent[localIndex];
-//		linear[index] = index;
-		return;
-	}
-	 */
+
+
 
 }
 
@@ -489,7 +555,7 @@ void generateAddress(dim3 grid, dim3 block, int *variance, int *d_X, int *d_Y, i
 	cudaStreamCreate(&grOne);
 	cudaStreamCreate(&grTwo);
 	cudaStreamCreate(&grThree);
-	generateAddress_One<<<grid,block, 0, grOne>>>(variance, d_X, d_Y, d_linPattern);
+//	generateAddress<<<grid,block, 0, grOne>>>(variance, d_X, d_Y, d_linPattern);
 	//	generateAddress_Two<<<grid,block, 0, grTwo>>>(variance, X, Y, linear);
 	//	generateAddress_Three<<<grid,block, 0, grThree>>>(variance, X, Y, linear);
 	cudaStreamDestroy(grOne);
@@ -502,18 +568,18 @@ void generateAddress(dim3 grid, dim3 block, int *variance, int *d_X, int *d_Y, i
 __device__ void addByReduction(volatile float *cache, float *temp)
 {
 
-	int localIndex = threadIdx.x + threadIdx.y * blockDim.x;
+	int localIndex = threadIdx.x;// + threadIdx.y * blockDim.x;
 
-	if( localIndex < 128) {
-		cache[localIndex] += cache[localIndex + 128];
-	}
-	__syncthreads();
-	if( localIndex < 64) {
-		cache[localIndex] += cache[localIndex + 64];
-	}
-	__syncthreads();
-	if( localIndex < 32) {
-		cache[localIndex]+=cache[localIndex+32];
+//	if( localIndex < 128) {
+//		cache[localIndex] += cache[localIndex + 128];
+//	}
+//	__syncthreads();
+//	if( localIndex < 64) {
+//		cache[localIndex] += cache[localIndex + 64];
+//	}
+//	__syncthreads();
+	if( localIndex < 16) {
+//		cache[localIndex]+=cache[localIndex+32];
 		cache[localIndex]+=cache[localIndex+16];
 		cache[localIndex]+=cache[localIndex+8];
 		cache[localIndex]+=cache[localIndex+4];
@@ -527,7 +593,7 @@ __device__ void addByReduction(volatile float *cache, float *temp)
 }
 
 
-__device__ void volumeRender(int tempX, int tempY, int tempLin, float *d_vol, float *d_red, float *d_green, float *d_blue, float *d_gray, float *res_red,
+__device__ void volumeRender(int tempLin, float *d_vol, float *d_red, float *d_green, float *d_blue, float *d_gray, float *res_red,
 		float *res_green, float *res_blue, int imageW, int imageH, float density, float brightness,float transferOffset, float transferScale, bool isoSurface,
 		float isoValue, bool lightingCondition, float tstep,bool cubic, bool cubicLight, int filterMethod)
 {
@@ -562,6 +628,9 @@ __device__ void volumeRender(int tempX, int tempY, int tempLin, float *d_vol, fl
 	float3 maxB = (make_float3(x_space, y_space, z_space));
 	const float3 boxMin = minB;//make_float3(-0.9316f, -0.9316f, -0.5f);
 	const float3 boxMax = maxB;//make_float3( 0.9316f, 0.9316f, 0.5f);
+
+	int tempX = tempLin%imageW;
+	int tempY = tempLin/imageH;
 
 	float u = (tempX/(float)imageW)*2.0f - 1.0f;
 	float v = (tempY/(float)imageH)*2.0f - 1.0f;
@@ -915,77 +984,98 @@ __global__ void d_renderFirst(float *d_var, int *d_varPriority, float *d_vol, fl
 
 
 	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
-	int index = x + y * imageW;
-	int localIndex = threadIdx.x + threadIdx.y * blockDim.x;
+//	int y = blockIdx.y*blockDim.y + threadIdx.y;
+	int index = x;// + y * imageW;
+//	d_linPattern[index] = 0;
+	int localIndex = threadIdx.x; // + threadIdx.y * blockDim.x;
 	int bid = blockIdx.x + blockIdx.y * gridDim.x;
-	int STRIPSIZE = imageW * (blockDim.y + PAD);
+	int STRIPSIZE = imageW * (16 + PAD);
 	int local_x, local_y;
 	int tempX, tempY, tempLin;
-//	int row = d_varPriority[bid];
+	int row = d_varPriority[bid];
 	local_x = d_temp[0][localIndex].x;
 	local_y = d_temp[0][localIndex].y;
-	__shared__ float deviceData[TILE_W*TILE_H]; //TILE_W*TILE_H
-	__shared__ float TempDeviceData[TILE_W*TILE_H];
-	__shared__ float var[TILE_W*TILE_H];
+	__shared__ float deviceData[32]; //TILE_W*TILE_H
+	__shared__ float TempDeviceData[32];
+	__shared__ float var[32];
 	float variance;
 	float sum;
 	__shared__ float mean;
-	//int haloIndex = (blockIdx.y * STRIPSIZE) + (PAD * GW) + (threadIdx.y * GW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + threadIdx.x;
-	//	if(x>=onPixel)
-	//		return;
-	//	else
-	//	{
 	deviceData[localIndex] = 0.0f;
 	TempDeviceData[localIndex] = 0.0f;
 	var[localIndex] = 0.0f;
 
 	__syncthreads();
-	if((local_x == 999 && local_y ==999) || localIndex>31)
+//	printf("[bid]: %d\t[X,Y]: (%d,%d) global ID: %d\n", bid,local_x, local_y, tempLin);
+	tempLin = (blockIdx.y * STRIPSIZE) + (PAD * imageW) + (local_y * imageW) + (blockIdx.x + 1) * PAD + blockIdx.x * 16 + local_x;
+
+	volumeRender(tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
+			density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
+
+	deviceData[localIndex] = d_gray[tempLin];
+	TempDeviceData[localIndex] = d_gray[tempLin];
+	__syncthreads();
+	addByReduction(TempDeviceData, &sum);
+	__syncthreads();
+	mean = sum/32.0;
+	__syncthreads();
+	var[localIndex] = (deviceData[localIndex] - mean)*(deviceData[localIndex] - mean);
+	__syncthreads();
+
+	addByReduction(var, &variance);
+	__syncthreads();
+//	d_varPriority[bid] = 4;//(int(variance/0.25));
+//
+	if(localIndex == 0)
 	{
-
-		return;
-	}
-	else
-	{
-		tempLin = (blockIdx.y * STRIPSIZE) + (PAD * imageW) + (local_y * imageW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + local_x;
-		tempY = tempLin/imageW;
-		tempX = tempLin%imageW;
-		volumeRender(tempX, tempY, tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
-				density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
-
-		deviceData[localIndex] = d_gray[tempLin];
-		TempDeviceData[localIndex] = d_gray[tempLin];
-		__syncthreads();
-		addByReduction(TempDeviceData, &sum);
-		__syncthreads();
-		mean = sum/32.0;
-		__syncthreads();
-		var[localIndex] = (deviceData[localIndex] - mean)*(deviceData[localIndex] - mean);
-		__syncthreads();
-
-		addByReduction(var, &variance);
-		__syncthreads();
-		if(localIndex == 0)
+		d_var[bid] = variance;
+		int v = (int(variance/0.25));//%7;
+		if(v>6)
 		{
-			d_var[bid] = variance;
-			int v = (int(variance/0.20)*10)%7;
-//			printf("[%d] V: %f -> %d\n", bid, variance, v);
-/*			if(v>6)
-			{
-				v = v%7;
-				printf("Bid: %d\t %d\n", bid,v);
-			}*/
-//			d_varPriority[bid] = 3;
-//			__syncthreads();
-
-
-//			printf("bidx: %d\t bidy: %d\tBID: %d var: %f\n", blockIdx.x, blockIdx.y, bid, d_varPriority[bid]);
+			v = 6;
 		}
-		d_linPattern[tempLin] = 1;
-		d_var[tempLin] = 0.0f;
-
+		d_varPriority[bid] = v;
 	}
+	__syncthreads();
+	d_linPattern[tempLin] = 1;
+//	printf("BID: %d: %d\n", bid, d_varPriority[bid]);
+
+//	if((local_x == 999 && local_y ==999) || localIndex>31)
+//	{
+//		return;
+//	}
+//	else
+//	{
+//		tempLin = (blockIdx.y * STRIPSIZE) + (PAD * imageW) + (local_y * imageW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + local_x;
+//		tempY = tempLin/imageW;
+//		tempX = tempLin%imageW;
+//		volumeRender(tempX, tempY, tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
+//				density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
+//
+//		deviceData[localIndex] = d_gray[tempLin];
+//		TempDeviceData[localIndex] = d_gray[tempLin];
+//		__syncthreads();
+//		addByReduction(TempDeviceData, &sum);
+//		__syncthreads();
+//		mean = sum/32.0;
+//		__syncthreads();
+//		var[localIndex] = (deviceData[localIndex] - mean)*(deviceData[localIndex] - mean);
+//		__syncthreads();
+//
+//		addByReduction(var, &variance);
+//		__syncthreads();
+//		if(localIndex == 0)
+//		{
+//			d_var[bid] = variance;
+//			int v = (int(variance/0.20));//%7;
+//			if(v>6)
+//			{
+//				v = 6;
+//			}
+//			d_varPriority[bid] = v;
+//		}
+//		d_linPattern[tempLin] = 1;
+//	}
 
 }
 
@@ -998,6 +1088,7 @@ __global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, f
 	int x = blockIdx.x*blockDim.x + threadIdx.x;
 	int y = blockIdx.y*blockDim.y + threadIdx.y;
 	int index = x + y * imageW;
+//	d_linPattern[index] = 0;
 	int STRIPSIZE = imageW * (blockDim.y + PAD);
 	int bid = blockIdx.x + blockIdx.y * gridDim.x;
 	int localIndex = threadIdx.x + threadIdx.y * TILE_W;
@@ -1009,22 +1100,15 @@ __global__ void d_renderSecond(float *d_var, int *d_varPriority, float *d_vol, f
 	int local_y = d_temp[row][localIndex].y;
 	int tempX, tempY, tempLin;
 
-
 	if((local_x == 999) && (local_y ==999))
 	{
-//		d_red[tempLin] = 0.5f;
-//		d_green[tempLin] = 0.5f;
-//		d_blue[tempLin] = 0.5f;
-//		d_varPriority[bid] = 0;
+
 		return;
 	}
 	else
 	{
 		tempLin = (blockIdx.y * STRIPSIZE) + (PAD * imageW) + (local_y * imageW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + local_x;
-			tempY = tempLin/imageW;
-			tempX = tempLin%imageW;
-
-		volumeRender(tempX, tempY, tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
+		volumeRender(tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH,
 				density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
 		d_linPattern[tempLin] = 1;
 //		d_varPriority[bid] = 0;
@@ -1107,7 +1191,7 @@ __global__ void d_render_stripe(int *d_pattern, int *d_linear, int *d_xPattern, 
 	int tempX = d_xPattern[id];
 	int tempY = d_yPattern[id];
 
-	volumeRender(tempX, tempY, tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset,
+	volumeRender(tempLin, d_vol, d_red, d_green, d_blue, d_gray, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset,
 			transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod);
 
 	/*
@@ -1408,7 +1492,7 @@ __global__ void d_render_stripe(int *d_pattern, int *d_linear, int *d_xPattern, 
 
 
 
-void render_kernel(dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_var, int *d_varPriority, int *d_pattern, int *d_linear, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue,
+void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_var, int *d_varPriority, float *h_var, int *h_varPriority, int *d_pattern, int *d_linear, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_gray, float *d_red, float *d_green, float *d_blue,
 		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
 		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, int *d_linPattern, int *d_X, int *d_Y, int onPixel, int stripePixels)
 {
@@ -1425,24 +1509,22 @@ void render_kernel(dim3 gridVol, dim3 gridVolStripe, dim3 blockSize, float *d_va
 	d_render_stripe<<<gridVolStripe, 256, 0, stripe>>>(d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_gray, d_red, d_green, d_blue,res_red, res_green, res_blue,
 			imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, stripePixels);
 
+//	generateAddress<<<gridVol,blockSize>>>(d_varPriority, d_linPattern);
 
-	d_renderFirst<<<gridVol, blockSize, 0, blocks>>>(d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue,res_red, res_green, res_blue, imageW, imageH, density, brightness,
+	d_renderFirst<<<gridVol, 32, 0, blocks>>>(d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue,res_red, res_green, res_blue, imageW, imageH, density, brightness,
 			transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, onPixel);
+//	 cudaMemcpy(h_var, d_var, sizeof(float) * gridVol.x * gridVol.y, cudaMemcpyDeviceToHost);
+//   writeVarianceResult(h_var);
+//	varianceAnalysis(h_var, h_varPriority, gridVol);
+//	cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyHostToDevice);
 
 
+
+//	cudaDeviceSynchronize();
 	d_renderSecond<<<gridVol,blockSize, 0, blocks>>>(d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset, transferScale,
 			isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel);
+//	cudaThreadSynchronize();
 
-	/*
-	firstPass(gridVol, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH, density, prightness, transferOffset, transferScale,
-			isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, onPixel);
-	 */
-
-	/*
-	gridVol = dim3(iDivUp(onPixel,16));
-	d_render<<<gridVol, 256, 0, blocks>>>(d_varPriority, d_vol, d_gray, d_red, d_green, d_blue,res_red, res_green, res_blue, imageW, imageH, density, brightness,
-			transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, deviceLinear, d_X, d_Y, onPixel);
-	 */
 	cudaStreamDestroy(stripe);
 	cudaStreamDestroy(blocks);
 	cudaDeviceSynchronize();
@@ -1466,30 +1548,36 @@ __global__ void blend(int *d_varPriority, bool reconstruct, int *d_linPattern, u
 		temp.x = res_red[index];
 		temp.y = res_green[index];
 		temp.z = res_blue[index];
-		d_output[index] = rgbaFloatToInt(temp);
-		res_red[index] = 0.0f;
-		res_green[index] = 0.0f;
-		res_blue[index] = 0.0f;
-		d_linPattern[index] = 0;
 	}
-	else{
+	else
+	{
 		temp.x = d_red[index];
 		temp.y = d_green[index];
 		temp.z = d_blue[index];
-		d_output[index] = rgbaFloatToInt(temp);
-		d_red[index] = 0.0f;
-		d_green[index] = 0.0f;
-		d_blue[index] = 0.0f;
-		res_red[index] = 0.0f;
-		res_green[index] = 0.0f;
-		res_blue[index] = 0.0f;
-		d_linPattern[index] = 0;
+//		d_output[index] = rgbaFloatToInt(temp);
+//		d_red[index] = 0.0f;
+//		d_green[index] = 0.0f;
+//		d_blue[index] = 0.0f;
+//		res_red[index] = 0.0f;
+//		res_green[index] = 0.0f;
+//		res_blue[index] = 0.0f;
+//		d_linPattern[index] = 0;
 	}
+
+	d_output[index] = rgbaFloatToInt(temp);
+	res_red[index] = 0.0f;
+	res_green[index] = 0.0f;
+	res_blue[index] = 0.0f;
+	d_red[index] = 0.0f;
+	d_green[index] = 0.0f;
+	d_blue[index] = 0.0f;
+	d_linPattern[index] = 0;
 
 	int bid = blockIdx.x + blockIdx.y * gridDim.x;
 	if(localIndex == 0)
 	{
 		d_varPriority[bid] = 0;
+
 	}
 
 
@@ -1610,16 +1698,15 @@ __global__ void testingConstantMemory()
 }
 
 
-void copyConstantTest(dim3 grid, dim3 block, int temp[7][256])
-{
-	checkCudaErrors(cudaMemcpyToSymbol(d_temp, temp, 7*256*sizeof(int)));
-	testingConstantMemory<<<grid,block>>>();
-}
+//void copyConstantTest(dim3 grid, dim3 block, int temp[7][256])
+//{
+//	checkCudaErrors(cudaMemcpyToSymbol(d_temp, temp, 7*256*sizeof(int)));
+//	testingConstantMemory<<<grid,block>>>();
+//}
 
 void copyConstantTest_1(dim3 grid, dim3 block, int_2 temp[7][256])
 {
 	checkCudaErrors(cudaMemcpyToSymbol(d_temp, temp, 7*256*sizeof(int_2)));
-	testingConstantMemory<<<grid,256>>>();
 }
 
 

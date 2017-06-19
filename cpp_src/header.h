@@ -92,7 +92,7 @@ float *h_temp, *d_temp;
 int GW, GH;
 dim3 blockSize;//(16, 16);
 dim3 gridSize;
-dim3 gridVolStripe, gridVol;
+dim3 gridVolStripe, gridVol, gridFirstPass;
 dim3 gridBlend;
 
 

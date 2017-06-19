@@ -12,6 +12,7 @@ CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o
  ../common/inc/helper_image.h
  ../common/inc/helper_string.h
  ../common/inc/helper_timer.h
+ ../cuda_src/constantMemory.h
  ../cuda_src/kernel.h
  ../cuda_src/reconstruction.h
  /home/reza/cuda-workspace/adaptiveSampling/cpp_src/deviceVars.h

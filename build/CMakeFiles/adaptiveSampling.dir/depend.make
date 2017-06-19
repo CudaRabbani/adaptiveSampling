@@ -11,6 +11,7 @@ CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../common/inc/helper_functio
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../common/inc/helper_image.h
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../common/inc/helper_string.h
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../common/inc/helper_timer.h
+CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../cuda_src/constantMemory.h
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../cuda_src/kernel.h
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../cuda_src/reconstruction.h
 CMakeFiles/adaptiveSampling.dir/cpp_src/main.cpp.o: ../cpp_src/deviceVars.h

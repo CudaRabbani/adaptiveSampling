@@ -134,7 +134,11 @@ ctime
 sys/time.h
 -
 
+../cuda_src/constantMemory.h
+
 ../cuda_src/kernel.h
+constantMemory.h
+../cuda_src/constantMemory.h
 
 ../cuda_src/reconstruction.h
 stdio.h
@@ -149,6 +153,8 @@ helper_cuda.h
 ../cuda_src/helper_cuda.h
 helper_functions.h
 ../cuda_src/helper_functions.h
+constantMemory.h
+../cuda_src/constantMemory.h
 
 /home/reza/cuda-workspace/adaptiveSampling/cpp_src/deviceVars.h
 

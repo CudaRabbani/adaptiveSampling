@@ -1,5 +1,6 @@
 #include "deviceVars.h"
 #include "reconstruction.h"
+#include "constantMemory.h"
 
 
 #define MASK_W 7
@@ -12,7 +13,6 @@
 #define clamp(x) (min(max((x), 0.0), 1.0))
 #define ThreadPerBlock TILE_H*TILE_W
 #define PAD 3
-
 
 cudaStream_t R, G, B;
 cudaEvent_t Recon_start, Recon_end;
@@ -28,8 +28,9 @@ __device__ void convolve(float *data, float *temp, float *convResult, float *hol
 
 
 __device__ __constant__ float MASK[MASK_W * MASK_H];
+__constant__ int_2 d_temp[7][256];
 
-__global__ void reconstructionKernel(float *data, float *result, int *pattern, int dataH, int dataW, volatile float *device_x, volatile float *device_p)
+__global__ void reconstructionKernel(float *data, float *result, int *pattern, int *d_varPriority, int dataH, int dataW, volatile float *device_x, volatile float *device_p)
 {
 
     __shared__ float holoArray[w*w]; //contains holo elements
@@ -49,6 +50,8 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
     volatile __shared__ float cache_next_r[ThreadPerBlock]; //for dot product only
     __shared__ float cache[ThreadPerBlock];
     __shared__ int pixels[ThreadPerBlock];
+    int local_x, local_y;
+
 
     float dot_Num;
     float dot_Denom;
@@ -71,12 +74,34 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 	int ty = y + (blockIdx.y +1)* PAD;
 
 	int localIndex = threadIdx.x + threadIdx.y * TILE_W;
-//	int holoIndex = tx + ty * dataW;
 	int haloIndex = (blockIdx.y * STRIPSIZE) + (PAD * GW) + (threadIdx.y * GW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + threadIdx.x;
-//	result[index] = data[index];
+
+	int row = d_varPriority[bid];
+//	if(localIndex == 0)
+//	{
+//		pixels[localIndex] = 0;
+//	}
+//	__syncthreads();
+/*
+	if(localIndex == 0)
+	{
+		for(int i=0; i< ThreadPerBlock; i++)
+		{
+			local_x = d_temp[row][i].x;
+			local_y = d_temp[row][i].y;
+			int tempLin = local_x + local_y * 16;
+			if(local_x != 999 && local_y != 999)
+			{
+
+//				pattern[i] = 1;
+				pixels[tempLin] = 1;
+			}
+
+		}
+	}
 
 	__syncthreads();
-
+*/
 	if(localIndex == 0)
 	{
 		int holoCounter = 0;
@@ -130,7 +155,7 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 	// (fabs(flag - 0.00) > 1e-2) (fabs(flag - 0.00) > 1e-6) && (counter < 3) && (counter < 50)    fabs(flag - 0.00) > 1e-6
 
 
-	while (fabs(flag - 0.00) > 1e-6 || counter < 15) //fabs(flag - 0.00) > 1e-6			counter < 50
+	while (fabs(flag - 0.00) > 1e-6 || counter < 35) //fabs(flag - 0.00) > 1e-6			counter < 50
 		{
 			//Dot product goes here and the answer will be stored in dot_result_num
 			cache_crnt_r[localIndex] = d_current_r[localIndex]*d_current_r[localIndex];
@@ -163,9 +188,8 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 			__syncthreads();
 		}
 
-
-
 	result[haloIndex] = d_next_x[localIndex];
+//	pattern[haloIndex] = pixels[localIndex];
 
 
 
@@ -269,7 +293,7 @@ void initializeConvolutionFilter(float *kernel, int kernelLength)
 
 }
  void reconstructionFunction(dim3 grid, dim3 block, float *red, float *green, float *blue,
- 		int *pattern, float *res_red, float *res_green, float *res_blue, int dataH, int dataW, float *device_x, float *device_p)
+ 		int *pattern, int *d_varPriority, float *res_red, float *res_green, float *res_blue, int dataH, int dataW, float *device_x, float *device_p)
  {
 /*
 	 cudaEventCreate(&Recon_start);
@@ -279,9 +303,9 @@ void initializeConvolutionFilter(float *kernel, int kernelLength)
 	cudaStreamCreate(&G);
 	cudaStreamCreate(&B);
 
-     reconstructionKernel<<<grid,block,0,R>>>(red, res_red, pattern, dataH, dataW, device_x, device_p);
-     reconstructionKernel<<<grid,block,0,G>>>(green, res_green, pattern, dataH, dataW, device_x, device_p);
-     reconstructionKernel<<<grid,block,0,B>>>(blue, res_blue, pattern, dataH, dataW, device_x, device_p);
+     reconstructionKernel<<<grid,block,0,R>>>(red, res_red, pattern, d_varPriority, dataH, dataW, device_x, device_p);
+     reconstructionKernel<<<grid,block,0,G>>>(green, res_green, pattern, d_varPriority, dataH, dataW, device_x, device_p);
+     reconstructionKernel<<<grid,block,0,B>>>(blue, res_blue, pattern, d_varPriority, dataH, dataW, device_x, device_p);
 
      cudaStreamDestroy(R);
      cudaStreamDestroy(G);
@@ -316,3 +340,16 @@ void initializeConvolutionFilter(float *kernel, int kernelLength)
 	 testAddKernel<<<grid,block>>>(d_a, size, ans);
  }
 
+__global__ void testConstant()
+{
+	int x = 5;
+	int y = 6;
+ 	printf("Reconstruction: %d, %d\n", d_temp[x][y].x, d_temp[x][y].y);
+}
+
+ void copyConstantTestReconstruction(dim3 grid, dim3 block, int_2 temp[7][256])
+ {
+ 	checkCudaErrors(cudaMemcpyToSymbol(d_temp, temp, 7*256*sizeof(int_2)));
+ 	testConstant<<<1,1>>>();
+
+ }

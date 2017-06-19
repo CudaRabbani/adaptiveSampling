@@ -22,6 +22,7 @@ SET(CUDA_NVCC_DEPEND
  "/home/reza/cuda-workspace/adaptiveSampling/common/inc/helper_string.h"
  "/home/reza/cuda-workspace/adaptiveSampling/common/inc/helper_timer.h"
  "/home/reza/cuda-workspace/adaptiveSampling/cpp_src/deviceVars.h"
+ "/home/reza/cuda-workspace/adaptiveSampling/cuda_src/constantMemory.h"
  "/home/reza/cuda-workspace/adaptiveSampling/cuda_src/kernel.cu"
  "/home/reza/cuda-workspace/adaptiveSampling/cuda_src/reconstruction.h"
  "/usr/include/GL/gl.h"
