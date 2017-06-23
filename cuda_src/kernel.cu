@@ -1520,16 +1520,12 @@ void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 bl
 			imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, stripePixels);
 
 //	generateAddress<<<gridVol,blockSize>>>(d_varPriority, d_linPattern);
-
 	d_renderFirst<<<gridVol, 32, 0, blocks>>>(d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue,res_red, res_green, res_blue, imageW, imageH, density, brightness,
 			transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, onPixel);
 //	 cudaMemcpy(h_var, d_var, sizeof(float) * gridVol.x * gridVol.y, cudaMemcpyDeviceToHost);
 //   writeVarianceResult(h_var);
 //	varianceAnalysis(h_var, h_varPriority, gridVol);
 //	cudaMemcpy(d_varPriority, h_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyHostToDevice);
-
-
-
 //	cudaDeviceSynchronize();
 	d_renderSecond<<<gridVol,blockSize, 0, blocks>>>(gt, d_var, d_varPriority, d_vol, d_gray, d_red, d_green, d_blue, res_red, res_green, res_blue, imageW, imageH, density, brightness, transferOffset, transferScale,
 			isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_linPattern, d_X, d_Y, onPixel);
@@ -1538,6 +1534,14 @@ void render_kernel(dim3 gridFirstPass, dim3 gridVol, dim3 gridVolStripe, dim3 bl
 	cudaStreamDestroy(stripe);
 	cudaStreamDestroy(blocks);
 	cudaDeviceSynchronize();
+
+	cudaMemcpy(h_varPriority, d_varPriority, sizeof(int)*gridVol.x*gridVol.y, cudaMemcpyDeviceToHost);
+	int temp = 0;
+	for(int i = 0; i<gridVol.x*gridVol.y; i++)
+	{
+		temp +=h_varPriority[i]*32+32;
+	}
+	printf("Rendered pixel for Stripe+FirstPass+SecondPass: %d+%d+%d= %d\nPercentage: %f\n", stripePixels, onPixel,temp, stripePixels+onPixel+temp,float ((stripePixels+onPixel+temp)*100.0/(imageH*imageW)));
 
 
 }

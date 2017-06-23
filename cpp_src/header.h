@@ -65,7 +65,7 @@ typedef unsigned char VolumeType;
 int width, height;
 int dataH, dataW;
 int window_W, window_H;
-int stripePixels, percentage, onPixel;
+int stripePixels, percentage, onPixel, *totalPixel;
 int *d_pattern, *h_pattern, *h_linear;
 int *xPattern, *yPattern;
 int *h_X, *h_Y, *host_linear, *hostX, *hostY, *hostLinear, *d_X, *d_Y, *deviceLinear;
@@ -119,16 +119,16 @@ float density = 1.00f;
 float brightness = 1.0f;
 float transferOffset =  0.19;//0.008; 0.19;//0.0f; //0.12
 float transferScale = 1.0f;
-bool linearFiltering = false;
-float tstep = 0.001250f;
+bool linearFiltering = true;
+float tstep = 0.0015f;
 float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface =false;
 float isoValue = 0.208 ;
-bool cubic = true;
+bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
-bool writeMode = true;
+bool writeMode = false;
 bool WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
 
 bool gt = false;

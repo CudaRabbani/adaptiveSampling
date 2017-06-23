@@ -1,7 +1,7 @@
 clc;
 clear;
-r = 1024;
-c = 1024;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -20,17 +20,18 @@ W = GW;
 path = '../textFiles/Pattern/';
 patternString = '';
 dirName = '';
-dirName = [num2str(H) 'by' num2str(W) '_' num2str(percentage)];
+%dirName = [num2str(H) 'by' num2str(W) '_' num2str(percentage)];
+dirName = [num2str(H) 'by' num2str(W)];
 dirName = strcat(path,dirName);
 dirName = char(dirName)
 mkdir(dirName);
 file = 'strip.txt';
 fileName = strcat(dirName,'/',file); %../textFiles/Pattern/516by516_0/strip.txt
 ptrnLinIdx = [dirName '/' num2str(H) 'by' num2str(W) '_ptrnIdx.txt']
-xFile = [dirName '/' num2str(H) 'by' num2str(W) 'Xcoord.txt'];
-yFile = [dirName '/' num2str(H) 'by' num2str(W) 'Ycoord.txt'];
-patternMatrix = [dirName '/' num2str(H) 'by' num2str(W) 'matrix.txt'];
-totalPixel = [dirName '/' num2str(H) 'by' num2str(W) '_patternInfo.txt'];
+xFile = [dirName '/' num2str(H) 'by' num2str(W) 'Xcoord.txt']
+yFile = [dirName '/' num2str(H) 'by' num2str(W) 'Ycoord.txt']
+patternMatrix = [dirName '/' num2str(H) 'by' num2str(W) 'matrix.txt']
+totalPixel = [dirName '/' num2str(H) 'by' num2str(W) '_patternInfo.txt']
 
 patternString = ones(H, W);
 for col = 1:blockX+padX:blockX+padX %1:N+P:N+P

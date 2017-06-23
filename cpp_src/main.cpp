@@ -353,8 +353,8 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
-	strcat(path,"_");
-	strcat(path,percent);
+//	strcat(path,"_");
+//	strcat(path,percent);
 	strcat(path,"/"); //path = textFiles/Pattern/516by516_0/
 	char patternName[50] = "";
 	char name[50] = "";
@@ -380,15 +380,15 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(lin,dimY);
 	strcat(lin,linCoord);
 //	strcat(lin);
-//	printf("Linear Pattern File: %s\n", lin);
+	printf("Linear Pattern File: %s\n", lin);
 	strcat(xFile,path);
 	strcat(xFile,name);
 	strcat(xFile,xCoord);
-//	printf("X-COORD: %s\t", xFile);
+	printf("X-COORD: %s\t", xFile);
 	strcat(yFile,path);
 	strcat(yFile,name);
 	strcat(yFile,yCoord);
-//	printf("Y-COORD: %s\n", yFile);
+	printf("Y-COORD: %s\n", yFile);
 	char info[70] = "";
 	strcat(info,path);
 	strcat(info,name);
@@ -1027,7 +1027,7 @@ void motion(int x, int y)
     {
         // right = zoom
         viewTranslation.z += dy / 100.0f;
-        printf("Translation: %f\n", viewTranslation.z);
+//        printf("Translation: %f\n", viewTranslation.z);
     }
     else if (buttonState == 2)
     {
@@ -1040,7 +1040,7 @@ void motion(int x, int y)
         // left = rotate
         viewRotation.x += dy / 5.0f;
         viewRotation.y += dx / 5.0f;
-        printf("Rotation: %f, %f\n", viewRotation.x, viewRotation.y);
+ //       printf("Rotation: %f, %f\n", viewRotation.x, viewRotation.y);
     }
 
     ox = x;
@@ -1415,8 +1415,8 @@ int main(int argc, char **argv)
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
     strcat(patternInformation,W);
-    strcat(patternInformation,"_");
-    strcat(patternInformation,P);
+//    strcat(patternInformation,"_");
+//    strcat(patternInformation,P);
     strcat(patternInformation,"/");
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
@@ -1439,7 +1439,7 @@ int main(int argc, char **argv)
     {
     	printf("cudaMalloc error for d_pattern");
     }
-    printf("Total Number of Pixel is : %d\n", stripePixels);
+    printf("Total Number of Stripe Pixel is : %d\n", stripePixels);
 
     loadPattern(h_pattern,h_linear, xPattern, yPattern, GH, GW, stripePixels);
 
