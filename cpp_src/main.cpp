@@ -791,6 +791,7 @@ void display()
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
+    totalVolTimer +=volTimer;
 
 
 //    cudaMemcpy(d_linPattern, h_linPattern, sizeof(int)*width*height, cudaMemcpyHostToDevice);
@@ -815,6 +816,7 @@ void display()
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+   	totalReconTimer += reconTimer;
 
 
    	render();
@@ -897,6 +899,8 @@ void keyboard(unsigned char key, int x, int y)
                 exit(EXIT_SUCCESS);
             #else
                 printf("\nTotal number of generated frame is: %d\nTotal time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+                printf("Time for volume rendering: %f ms\t FPS for volumer: %f\n", totalVolTimer, float(frameCounter)/totalVolTimer*1000);
+                printf("Time for reconstruction: %f ms\t FPS for reconstruction: %f\n", totalReconTimer, float(frameCounter)/totalReconTimer*1000);
                 if(writeMode)
                 {
                     writeTimer();
@@ -1023,7 +1027,7 @@ void motion(int x, int y)
     {
         // right = zoom
         viewTranslation.z += dy / 100.0f;
-//        printf("Translation: %f\n", viewTranslation.z);
+        printf("Translation: %f\n", viewTranslation.z);
     }
     else if (buttonState == 2)
     {
@@ -1036,6 +1040,7 @@ void motion(int x, int y)
         // left = rotate
         viewRotation.x += dy / 5.0f;
         viewRotation.y += dx / 5.0f;
+        printf("Rotation: %f, %f\n", viewRotation.x, viewRotation.y);
     }
 
     ox = x;

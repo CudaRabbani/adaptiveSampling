@@ -105,8 +105,10 @@ int frameCounter;
 
 
 
-float3 viewRotation;// = make_float3(-100.0, -100.0,100.0f);
-float3 viewTranslation = make_float3(0.0, 0.0, -2.4f); //-3.0f
+float3 viewRotation = make_float3(-92.6,86.6,0.0);// = make_float3(-100.0, -100.0,100.0f);
+//viewRotation.x = -92.6f;
+//viewRotation.y = 86.6f;
+float3 viewTranslation = make_float3(0.0, 0.0, -1.52f); //-3.0f
 float invViewMatrix[12];
 int ox, oy;
 int buttonState = 0;
@@ -115,21 +117,21 @@ float angle = 0.0;
 
 float density = 1.00f;
 float brightness = 1.0f;
-float transferOffset = 0.00;//0.008; 0.19;//0.0f; //0.12
+float transferOffset =  0.19;//0.008; 0.19;//0.0f; //0.12
 float transferScale = 1.0f;
-bool linearFiltering = true;
-float tstep = 0.005f;
+bool linearFiltering = false;
+float tstep = 0.001250f;
 float tstepGrad = 0.01f;
-bool lightingCondition = true;
+bool lightingCondition = false;
 bool isoSurface =false;
 float isoValue = 0.208 ;
-bool cubic = false;
+bool cubic = true;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
 bool writeMode = true;
 bool WLinear, WCubic, WLinearLight, WCubicLight, WisoSurface;
 
-bool gt = true;
+bool gt = false;
 bool reconstruct = !gt;
 
 
@@ -138,6 +140,8 @@ GLuint tex = 0;     // OpenGL texture object
 struct cudaGraphicsResource *cuda_pbo_resource; // CUDA Graphics Resource (to transfer PBO)
 
 StopWatchInterface *timer = 0;
+
+float totalVolTimer = 0.0f, totalReconTimer = 0.0f;
 
 // Auto-Verification Code
 const int frameCheckNumber = 2;

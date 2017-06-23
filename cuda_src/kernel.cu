@@ -1029,10 +1029,10 @@ __global__ void d_renderFirst(float *d_var, int *d_varPriority, float *d_vol, fl
 	if(localIndex == 0)
 	{
 		d_var[bid] = variance;
-		int v = (int(variance/0.25));//%7;
-		if(v>6)
+		int v = (int(variance/0.15));//%7;
+		if(v>5)
 		{
-			v = 6;
+			v = 5;
 		}
 		d_varPriority[bid] = v;
 	}
@@ -1564,14 +1564,7 @@ __global__ void blend(int *d_varPriority, bool reconstruct, int *d_linPattern, u
 		temp.x = d_red[index];
 		temp.y = d_green[index];
 		temp.z = d_blue[index];
-//		d_output[index] = rgbaFloatToInt(temp);
-//		d_red[index] = 0.0f;
-//		d_green[index] = 0.0f;
-//		d_blue[index] = 0.0f;
-//		res_red[index] = 0.0f;
-//		res_green[index] = 0.0f;
-//		res_blue[index] = 0.0f;
-//		d_linPattern[index] = 0;
+
 	}
 
 	d_output[index] = rgbaFloatToInt(temp);

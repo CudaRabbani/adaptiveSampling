@@ -155,7 +155,7 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 	// (fabs(flag - 0.00) > 1e-2) (fabs(flag - 0.00) > 1e-6) && (counter < 3) && (counter < 50)    fabs(flag - 0.00) > 1e-6
 
 
-	while (fabs(flag - 0.00) > 1e-6) //fabs(flag - 0.00) > 1e-6			counter < 50
+	while (fabs(flag - 0.00) > 1e-3) //fabs(flag - 0.00) > 1e-6			counter < 50
 		{
 			//Dot product goes here and the answer will be stored in dot_result_num
 			cache_crnt_r[localIndex] = d_current_r[localIndex]*d_current_r[localIndex];

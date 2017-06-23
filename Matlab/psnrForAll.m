@@ -1,7 +1,7 @@
 clear;
 clc;
-r = 512;
-c = 512;
+r = 1024;
+c = 1024;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -42,64 +42,64 @@ for frame = 1:totalFrame
     LinearOn = [dirName 'triLinear/lightingOn/reconstructed/'];
     LinearOff = [dirName 'triLinear/lightingOff/reconstructed/'];
     
-    triLinearOnFile = strcat(LinearOn, rgbFile);
-    triLinearOffFile = strcat(LinearOff, rgbFile);
-    gtTriLinearOnFile = strcat(gtLinearOn, rgbFile);
-    gtTriLinearOffFile = strcat(gtLinearOff, rgbFile);
-    triLinearOnRGB = fopen(triLinearOnFile,'r');
-    triLinearOnValue = fread(triLinearOnRGB,'float32');
-    gtTriLinearOnRGB = fopen(gtTriLinearOnFile,'r');
-    gtTriLinearOnValue = fread(gtTriLinearOnRGB,'float32');
-    triLinearOffRGB = fopen(triLinearOffFile,'r');
-    triLinearOffValue = fread(triLinearOffRGB,'float32');
-    gtTriLinearOffRGB = fopen(gtTriLinearOffFile,'r');
-    gtTriLinearOffValue = fread(gtTriLinearOffRGB,'float32');
-    [row col plane] = size(triLinearOnValue);
-    triLinearOnRed = triLinearOnValue(1:3:row);
-    triLinearOnGreen = triLinearOnValue(2:3:row);
-    triLinearOnBlue = triLinearOnValue(3:3:row);
-    linearOnRed = reshape(triLinearOnRed, [H W]);
-    linearOnGreen = reshape(triLinearOnGreen, [H W]);
-    linearOnBlue = reshape(triLinearOnBlue, [H W]);
-    linearLightOn = cat(3, linearOnRed, linearOnGreen, linearOnBlue);
+%     triLinearOnFile = strcat(LinearOn, rgbFile);
+%     triLinearOffFile = strcat(LinearOff, rgbFile);
+%     gtTriLinearOnFile = strcat(gtLinearOn, rgbFile);
+%     gtTriLinearOffFile = strcat(gtLinearOff, rgbFile);
+%    triLinearOnRGB = fopen(triLinearOnFile,'r');
+%    triLinearOnValue = fread(triLinearOnRGB,'float32');
+%    gtTriLinearOnRGB = fopen(gtTriLinearOnFile,'r');
+%    gtTriLinearOnValue = fread(gtTriLinearOnRGB,'float32');
+%    triLinearOffRGB = fopen(triLinearOffFile,'r');
+%    triLinearOffValue = fread(triLinearOffRGB,'float32');
+%    gtTriLinearOffRGB = fopen(gtTriLinearOffFile,'r');
+%     gtTriLinearOffValue = fread(gtTriLinearOffRGB,'float32');
+%     [row col plane] = size(triLinearOnValue);
+%    triLinearOnRed = triLinearOnValue(1:3:row);
+%    triLinearOnGreen = triLinearOnValue(2:3:row);
+%    triLinearOnBlue = triLinearOnValue(3:3:row);
+%     linearOnRed = reshape(triLinearOnRed, [H W]);
+%     linearOnGreen = reshape(triLinearOnGreen, [H W]);
+%     linearOnBlue = reshape(triLinearOnBlue, [H W]);
+%     linearLightOn = cat(3, linearOnRed, linearOnGreen, linearOnBlue);
     
-    gtTriLinearOnRed = gtTriLinearOnValue(1:3:row);
-    gtTriLinearOnGreen = gtTriLinearOnValue(2:3:row);
-    gtTriLinearOnBlue = gtTriLinearOnValue(3:3:row);
-    gtlinearOnRed = reshape(gtTriLinearOnRed, [H W]);
-    gtlinearOnGreen = reshape(gtTriLinearOnGreen, [H W]);
-    gtlinearOnBlue = reshape(gtTriLinearOnBlue, [H W]);
-    gtlinearLightOn = cat(3, gtlinearOnRed, gtlinearOnGreen, gtlinearOnBlue);
-    
-    error = gtlinearLightOn - linearLightOn;
-    MSE = sum(sum(sum(error.^2))) / (H * W * 3);
-    PSNR = 20*log10(max(max(max(gtlinearLightOn))))-10*log10(MSE);
-    LinearLightOn = LinearLightOn + PSNR;
-    psnrLinearLightOn(frame) = PSNR;
-    PSNR = 0;
-    
-    triLinearOffRed = triLinearOffValue(1:3:row);
-    triLinearOffGreen = triLinearOffValue(2:3:row);
-    triLinearOffBlue = triLinearOffValue(3:3:row);
-    linearOffRed = reshape(triLinearOffRed, [H W]);
-    linearOffGreen = reshape(triLinearOffGreen, [H W]);
-    linearOffBlue = reshape(triLinearOffBlue, [H W]);
-    linearLightOff = cat(3, linearOffRed, linearOffGreen, linearOffBlue);
-    
-    gtTriLinearOffRed = gtTriLinearOffValue(1:3:row);
-    gtTriLinearOffGreen = gtTriLinearOffValue(2:3:row);
-    gtTriLinearOffBlue = gtTriLinearOffValue(3:3:row);
-    gtlinearOffRed = reshape(gtTriLinearOffRed, [H W]);
-    gtlinearOffGreen = reshape(gtTriLinearOffGreen, [H W]);
-    gtlinearOffBlue = reshape(gtTriLinearOffBlue, [H W]);
-    gtlinearLightOff = cat(3, gtlinearOffRed, gtlinearOffGreen, gtlinearOffBlue);
-    
-    error = gtlinearLightOff - linearLightOff;
-    MSE = sum(sum(sum(error.^2))) / (H * W * 3);
-    PSNR = 20*log10(max(max(max(gtlinearLightOff))))-10*log10(MSE);
-    LinearLightOff = LinearLightOff + PSNR;
-    psnrLinearLightOff(frame) = PSNR;
-    PSNR = 0;
+%     gtTriLinearOnRed = gtTriLinearOnValue(1:3:row);
+%     gtTriLinearOnGreen = gtTriLinearOnValue(2:3:row);
+%     gtTriLinearOnBlue = gtTriLinearOnValue(3:3:row);
+%     gtlinearOnRed = reshape(gtTriLinearOnRed, [H W]);
+%     gtlinearOnGreen = reshape(gtTriLinearOnGreen, [H W]);
+%     gtlinearOnBlue = reshape(gtTriLinearOnBlue, [H W]);
+%     gtlinearLightOn = cat(3, gtlinearOnRed, gtlinearOnGreen, gtlinearOnBlue);
+%     
+%     error = gtlinearLightOn - linearLightOn;
+%     MSE = sum(sum(sum(error.^2))) / (H * W * 3);
+%     PSNR = 20*log10(max(max(max(gtlinearLightOn))))-10*log10(MSE);
+%     LinearLightOn = LinearLightOn + PSNR;
+%     psnrLinearLightOn(frame) = PSNR;
+%     PSNR = 0;
+%     
+%     triLinearOffRed = triLinearOffValue(1:3:row);
+%     triLinearOffGreen = triLinearOffValue(2:3:row);
+%     triLinearOffBlue = triLinearOffValue(3:3:row);
+%     linearOffRed = reshape(triLinearOffRed, [H W]);
+%     linearOffGreen = reshape(triLinearOffGreen, [H W]);
+%     linearOffBlue = reshape(triLinearOffBlue, [H W]);
+%     linearLightOff = cat(3, linearOffRed, linearOffGreen, linearOffBlue);
+%     
+%     gtTriLinearOffRed = gtTriLinearOffValue(1:3:row);
+%     gtTriLinearOffGreen = gtTriLinearOffValue(2:3:row);
+%     gtTriLinearOffBlue = gtTriLinearOffValue(3:3:row);
+%     gtlinearOffRed = reshape(gtTriLinearOffRed, [H W]);
+%     gtlinearOffGreen = reshape(gtTriLinearOffGreen, [H W]);
+%     gtlinearOffBlue = reshape(gtTriLinearOffBlue, [H W]);
+%     gtlinearLightOff = cat(3, gtlinearOffRed, gtlinearOffGreen, gtlinearOffBlue);
+%     
+%     error = gtlinearLightOff - linearLightOff;
+%     MSE = sum(sum(sum(error.^2))) / (H * W * 3);
+%     PSNR = 20*log10(max(max(max(gtlinearLightOff))))-10*log10(MSE);
+%     LinearLightOff = LinearLightOff + PSNR;
+%     psnrLinearLightOff(frame) = PSNR;
+%     PSNR = 0;
     
     
     % tri-cubic
@@ -168,28 +168,23 @@ for frame = 1:totalFrame
     PSNR = 0;
     
     % iso-surface
-    gtIsoSurface = [dirName 'isoSurface/groundTruth/'];
-    IsoSurface = [dirName 'isoSurface/reconstructed/'];
-    
-   
-    
-    %tri-linear
-   
-    %tri-cubic
-    
-    %iso-surface
-    isoSurfaceFile = strcat(IsoSurface, rgbFile);
-    gtIsoSurfaceFile = strcat(gtIsoSurface, rgbFile);
-    
-    %file-open and reading
-    
-    
-
-    
-    isoSurfaceRGB = fopen(isoSurfaceFile,'r');
-    triCubicOnValue = fread(isoSurfaceRGB,'float32');
-    gtIsoSurfaceRGB = fopen(gtIsoSurfaceFile,'r');
-    triCubicOnValue = fread(gtIsoSurfaceRGB,'float32');
+%     gtIsoSurface = [dirName 'isoSurface/groundTruth/'];
+%     IsoSurface = [dirName 'isoSurface/reconstructed/'];
+% 
+%     
+%     %iso-surface
+%     isoSurfaceFile = strcat(IsoSurface, rgbFile);
+%     gtIsoSurfaceFile = strcat(gtIsoSurface, rgbFile);
+%     
+%     %file-open and reading
+%     
+%     
+% 
+%     
+%     isoSurfaceRGB = fopen(isoSurfaceFile,'r');
+%     triCubicOnValue = fread(isoSurfaceRGB,'float32');
+%     gtIsoSurfaceRGB = fopen(gtIsoSurfaceFile,'r');
+%     triCubicOnValue = fread(gtIsoSurfaceRGB,'float32');
     % Tri-Linear PSNR---------------------------------------->>>>>>
     
     
@@ -204,16 +199,16 @@ x = 1:totalFrame;
 yLightingOn = psnrLinearLightOn(x);
 yLightingOff = psnrLinearLightOff(x);
 
-plot(x, yLightingOn,'-o', x, yLightingOff,'-*');
-legend('Tri-Linear Lighting on', 'Tri-Linear Lighting off');
-grid on
-grid minor
-axis equal square
-title('PSNR for Tri-linear Lighting On Vs Lighting off');
-xlabel('Frame No');
-ylabel('PSNR');
-%hold on
-figure;
+% plot(x, yLightingOn,'-o', x, yLightingOff,'-*');
+% legend('Tri-Linear Lighting on', 'Tri-Linear Lighting off');
+% grid on
+% grid minor
+% axis equal square
+% title('PSNR for Tri-linear Lighting On Vs Lighting off');
+% xlabel('Frame No');
+% ylabel('PSNR');
+% %hold on
+% figure;
 
 yCubicLightOn = psnrCubicLightOn(x);
 yCubicLightOff = psnrCubicLightOff(x);
